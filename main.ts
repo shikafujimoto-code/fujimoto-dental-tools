@@ -14,6 +14,15 @@ app.get("/", async (c) => {
   }
 });
 
+app.get("/demo", async (c) => {
+  try {
+    const html = await Deno.readTextFile("./static/demo.html");
+    return c.html(html);
+  } catch {
+    return c.text("demo.html not found", 404);
+  }
+});
+
 app.get("/chat-widget.js", async (c) => {
   try {
     const js = await Deno.readTextFile("./static/chat-widget.js");
