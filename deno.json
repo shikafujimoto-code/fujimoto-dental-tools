@@ -5,11 +5,10 @@
   },
   "imports": {
     "hono": "jsr:@hono/hono@^4",
-    "hono/": "jsr:@hono/hono@^4/"
+    "hono/cors": "jsr:@hono/hono@^4/cors"
   },
   "deploy": {
     "project": "fujimoto-dental-tools",
-    "entrypoint": "main.ts",
-    "include": ["static/"]
+    "entrypoint": "main.ts"
   }
 }
