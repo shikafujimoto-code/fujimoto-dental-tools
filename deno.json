@@ -4,8 +4,7 @@
     "dev": "deno run --allow-net --allow-env --allow-read --watch main.ts"
   },
   "imports": {
-    "hono": "jsr:@hono/hono@^4",
-    "hono/cors": "jsr:@hono/hono@^4/cors"
+    "hono": "jsr:@hono/hono@^4"
   },
   "deploy": {
     "project": "fujimoto-dental-tools",

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
+import { cors } from "jsr:@hono/hono/cors";
 
 const app = new Hono();
 
