@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ふじもと歯科 | 患者説明資料ジェネレーター</title>
+  <style>
+    :root {
+      --primary: #1A73A7;
+      --primary-light: #E8F4FD;
+      --primary-dark: #125A8A;
+      --bg: #F0F7FF;
+      --card: #FFFFFF;
+      --text: #2D3748;
+      --text-light: #718096;
+      --border: #CBD5E0;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 24px 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .tooth-icon { font-size: 2.4rem; margin-bottom: 8px; }
+    header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.05em; }
+    header p { font-size: 0.9rem; opacity: 0.85; margin-top: 6px; }
+    main { max-width: 780px; margin: 32px auto; padding: 0 16px 40px; }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    .form-group { margin-bottom: 22px; }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 8px;
+      vertical-align: middle;
+      font-weight: normal;
+    }
+    select {
+      width: 100%;
+      padding: 12px 44px 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text);
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231A73A7' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,115,167,0.15);
+    }
+    .btn-generate {
+      width: 100%;
+      padding: 15px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.04em;
+      margin-top: 4px;
+    }
+    .btn-generate:hover:not(:disabled) {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(26,115,167,0.3);
+    }
+    .btn-generate:disabled { background: #A0AEC0; cursor: not-allowed; }
+    .loading { display: none; text-align: center; padding: 32px; }
+    .loading.active { display: block; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--primary-light);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 16px;
+    }
+    .loading p { color: var(--text-light); line-height: 1.7; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .result-card { display: none; }
+    .result-card.active { display: block; }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+    .result-header h2 { border: none; padding: 0; margin: 0; color: var(--primary); font-size: 1.1rem; }
+    .btn-copy {
+      padding: 8px 18px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-copy:hover { background: var(--primary); color: white; }
+    .result-content {
+      background: #FAFBFC;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      line-height: 1.85;
+      white-space: pre-wrap;
+      font-size: 0.93rem;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .error-msg {
+      background: #FFF5F5;
+      border: 1px solid #FC8181;
+      color: #C53030;
+      padding: 14px 18px;
+      border-radius: 8px;
+      display: none;
+      margin-bottom: 16px;
+    }
+    .error-msg.active { display: block; }
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-light);
+      font-size: 0.82rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="tooth-icon">🦷</div>
+  <h1>ふじもと歯科</h1>
+  <p>患者説明資料ジェネレーター &nbsp;|&nbsp; 堺市</p>
+</header>
+
+<main>
+  <div class="card">
+    <h2>📋 説明資料の設定</h2>
+
+    <div class="form-group">
+      <label for="treatment">治療メニュー <span class="badge">必須</span></label>
+      <select id="treatment">
+        <option value="">-- 選択してください --</option>
+        <option value="虫歯治療（う蝕治療）">虫歯治療（う蝕治療）</option>
+        <option value="歯周病治療">歯周病治療</option>
+        <option value="マウスピース矯正（インビザライン）">マウスピース矯正（インビザライン）</option>
+        <option value="インプラント治療">インプラント治療</option>
+        <option value="ホワイトニング">ホワイトニング</option>
+        <option value="小児歯科">小児歯科</option>
+        <option value="定期健診・クリーニング">定期健診・クリーニング</option>
+        <option value="入れ歯（義歯）治療">入れ歯（義歯）治療</option>
+        <option value="親知らず抜歯">親知らず抜歯</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="patient">対象患者 <span class="badge">必須</span></label>
+      <select id="patient">
+        <option value="">-- 選択してください --</option>
+        <option value="初診の患者さま">初診の患者さま</option>
+        <option value="お子さま連れの親御さん">お子さま連れの親御さん</option>
+        <option value="中高生・若い世代（13〜25歳）">中高生・若い世代（13〜25歳）</option>
+        <option value="成人（26〜50歳）">成人（26〜50歳）</option>
+        <option value="中高年（51〜70歳）">中高年（51〜70歳）</option>
+        <option value="高齢者（70歳以上）">高齢者（70歳以上）</option>
+        <option value="妊婦・授乳中の方">妊婦・授乳中の方</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="style">文章スタイル <span class="badge">必須</span></label>
+      <select id="style">
+        <option value="">-- 選択してください --</option>
+        <option value="丁寧でわかりやすい（標準）">丁寧でわかりやすい（標準）</option>
+        <option value="親しみやすく・フレンドリー">親しみやすく・フレンドリー</option>
+        <option value="専門的・詳細">専門的・詳細</option>
+        <option value="簡潔・要点重視">簡潔・要点重視</option>
+      </select>
+    </div>
+
+    <button class="btn-generate" id="generateBtn" onclick="generate()">
+      説明資料を生成する
+    </button>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>AIが説明資料を作成しています...<br>しばらくお待ちください</p>
+  </div>
+
+  <div class="card result-card" id="resultCard">
+    <div class="result-header">
+      <h2>📄 生成された説明資料</h2>
+      <button class="btn-copy" onclick="copyResult()">コピー</button>
+    </div>
+    <div class="result-content" id="resultContent"></div>
+  </div>
+</main>
+
+<footer>
+  <p>ふじもと歯科 &copy; 2024 &nbsp;|&nbsp; 堺市</p>
+</footer>
+
+<script>
+  async function generate() {
+    const treatment = document.getElementById('treatment').value;
+    const patient = document.getElementById('patient').value;
+    const style = document.getElementById('style').value;
+
+    if (!treatment || !patient || !style) {
+      showError('すべての項目を選択してください。');
+      return;
+    }
+
+    const btn = document.getElementById('generateBtn');
+    const loading = document.getElementById('loading');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultCard = document.getElementById('resultCard');
+
+    btn.disabled = true;
+    loading.classList.add('active');
+    errorMsg.classList.remove('active');
+    resultCard.classList.remove('active');
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ treatment, patient, style }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'エラーが発生しました');
+      }
+
+      document.getElementById('resultContent').textContent = data.result;
+      resultCard.classList.add('active');
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btn.disabled = false;
+      loading.classList.remove('active');
+    }
+  }
+
+  function showError(msg) {
+    const errorMsg = document.getElementById('errorMsg');
+    errorMsg.textContent = msg;
+    errorMsg.classList.add('active');
+  }
+
+  async function copyResult() {
+    const text = document.getElementById('resultContent').textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = document.querySelector('.btn-copy');
+      btn.textContent = 'コピー完了！';
+      setTimeout(() => { btn.textContent = 'コピー'; }, 2000);
+    } catch {
+      alert('コピーに失敗しました。テキストを手動で選択してください。');
+    }
+  }
+</script>
+
+</body>
+</html>
