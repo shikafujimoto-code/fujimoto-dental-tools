@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { cors } from "jsr:@hono/hono/cors";
-import { getCookie, setCookie } from "jsr:@hono/hono/cookie";
 
 const app = new Hono();
 
@@ -254,6 +253,18 @@ app.post("/api/chat", async (c) => {
 
 // ── Admin utilities ──────────────────────────────────────────────────────────
 
+function getAdminCookie(req: Request): string | undefined {
+  const cookieStr = req.headers.get("Cookie") ?? "";
+  for (const part of cookieStr.split(";")) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    if (part.slice(0, idx).trim() === "admin_auth") {
+      return part.slice(idx + 1).trim();
+    }
+  }
+  return undefined;
+}
+
 async function hashAdminToken(password: string): Promise<string> {
   const data = new TextEncoder().encode("fjmt_admin_" + password);
   const hash = await crypto.subtle.digest("SHA-256", data);
@@ -411,7 +422,7 @@ app.get("/admin/logs", async (c) => {
   if (!adminPassword) {
     return c.text("ADMIN_PASSWORD 環境変数が設定されていません", 500);
   }
-  const token = getCookie(c, "admin_auth");
+  const token = getAdminCookie(c.req.raw);
   const expected = await hashAdminToken(adminPassword);
   if (token !== expected) {
     return c.html(loginPageHtml());
@@ -431,25 +442,22 @@ app.post("/admin/logs", async (c) => {
     return c.html(loginPageHtml("パスワードが正しくありません"), 401);
   }
   const token = await hashAdminToken(adminPassword);
-  setCookie(c, "admin_auth", token, {
-    path: "/admin",
-    httpOnly: true,
-    secure: true,
-    sameSite: "Strict",
-    maxAge: 60 * 60 * 24,
+  const cookieVal = `admin_auth=${token}; Path=/admin; HttpOnly; Secure; SameSite=Strict; Max-Age=${60 * 60 * 24}`;
+  return new Response(null, {
+    status: 303,
+    headers: { "Location": "/admin/logs", "Set-Cookie": cookieVal },
   });
-  return c.redirect("/admin/logs", 303);
 });
 
 app.get("/admin/logs/csv", async (c) => {
   const adminPassword = Deno.env.get("ADMIN_PASSWORD");
   if (!adminPassword) {
-    return c.redirect("/admin/logs", 303);
+    return new Response(null, { status: 303, headers: { Location: "/admin/logs" } });
   }
-  const token = getCookie(c, "admin_auth");
+  const token = getAdminCookie(c.req.raw);
   const expected = await hashAdminToken(adminPassword);
   if (token !== expected) {
-    return c.redirect("/admin/logs", 303);
+    return new Response(null, { status: 303, headers: { Location: "/admin/logs" } });
   }
   const logs = await fetchAllLogs();
   const csv = buildCsv(logs);
@@ -464,14 +472,12 @@ app.get("/admin/logs/csv", async (c) => {
   });
 });
 
-app.get("/admin/logout", (c) => {
-  setCookie(c, "admin_auth", "", {
-    path: "/admin",
-    maxAge: 0,
-    httpOnly: true,
-    secure: true,
+app.get("/admin/logout", (_c) => {
+  const cookieVal = `admin_auth=; Path=/admin; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
+  return new Response(null, {
+    status: 303,
+    headers: { "Location": "/admin/logs", "Set-Cookie": cookieVal },
   });
-  return c.redirect("/admin/logs", 303);
 });
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
