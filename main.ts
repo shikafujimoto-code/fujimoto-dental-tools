@@ -1,9 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "jsr:@hono/hono/cors";
+import { getCookie, setCookie } from "jsr:@hono/hono/cookie";
 
 const app = new Hono();
 
 app.use("*", cors());
+
+const kv = await Deno.openKv().catch(() => null);
 
 app.get("/", async (c) => {
   try {
@@ -178,6 +181,13 @@ interface ChatRequest {
   history?: ChatMessage[];
 }
 
+interface ChatLog {
+  question: string;
+  reply: string;
+  timestamp: string;
+  sessionId: string;
+}
+
 app.post("/api/chat", async (c) => {
   try {
     const body = await c.req.json<ChatRequest>();
@@ -221,12 +231,250 @@ app.post("/api/chat", async (c) => {
     const data = await response.json();
     const reply = data.content[0].text;
 
+    if (kv) {
+      const sessionId = crypto.randomUUID();
+      const now = new Date();
+      const jstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+        .toISOString()
+        .replace("Z", "+09:00");
+      await kv.set(["chat_logs", now.getTime(), sessionId], {
+        question: message.trim(),
+        reply,
+        timestamp: jstTimestamp,
+        sessionId,
+      } satisfies ChatLog);
+    }
+
     return c.json({ reply });
   } catch (err) {
     console.error("Chat error:", err);
     return c.json({ error: "エラーが発生しました" }, 500);
   }
 });
+
+// ── Admin utilities ──────────────────────────────────────────────────────────
+
+async function hashAdminToken(password: string): Promise<string> {
+  const data = new TextEncoder().encode("fjmt_admin_" + password);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function fetchAllLogs(): Promise<ChatLog[]> {
+  if (!kv) return [];
+  const logs: ChatLog[] = [];
+  const iter = kv.list<ChatLog>({ prefix: ["chat_logs"] });
+  for await (const entry of iter) {
+    logs.push(entry.value);
+  }
+  logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  return logs;
+}
+
+function escHtml(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildCsv(logs: ChatLog[]): string {
+  const rows: string[][] = [["日時", "セッションID", "質問", "回答"]];
+  for (const log of logs) {
+    rows.push([log.timestamp, log.sessionId, log.question, log.reply]);
+  }
+  return rows
+    .map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    )
+    .join("\r\n");
+}
+
+function loginPageHtml(error?: string): string {
+  const errorHtml = error
+    ? `<div class="error">${escHtml(error)}</div>`
+    : "";
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者ログイン - ふじもと歯科</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .card { background: white; border-radius: 12px; padding: 2rem 2.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 100%; max-width: 380px; }
+    h1 { font-size: 1.15rem; color: #1A73A7; margin-bottom: 1.5rem; text-align: center; }
+    label { display: block; font-size: 0.85rem; color: #4a5568; margin-bottom: 0.4rem; font-weight: 600; }
+    input[type=password] { width: 100%; padding: 0.7rem 1rem; border: 1.5px solid #cbd5e0; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
+    input[type=password]:focus { border-color: #1A73A7; }
+    button { width: 100%; padding: 0.8rem; background: #1A73A7; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: background 0.15s; }
+    button:hover { background: #125A8A; }
+    .error { background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🦷 管理者ログイン</h1>
+    ${errorHtml}
+    <form method="POST" action="/admin/logs">
+      <div style="margin-bottom:1rem">
+        <label for="pw">パスワード</label>
+        <input type="password" id="pw" name="password" autofocus required>
+      </div>
+      <button type="submit">ログイン</button>
+    </form>
+  </div>
+</body>
+</html>`;
+}
+
+function logsPageHtml(logs: ChatLog[]): string {
+  const rowsHtml = logs
+    .map(
+      (log) => `
+      <tr>
+        <td class="td-time">${escHtml(log.timestamp)}</td>
+        <td class="td-sid">${escHtml(log.sessionId.slice(0, 8))}…</td>
+        <td class="td-q">${escHtml(log.question)}</td>
+        <td class="td-a">${escHtml(log.reply)}</td>
+      </tr>`
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>チャットログ - ふじもと歯科</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #f0f4f8; color: #2d3748; min-height: 100vh; }
+    header { background: #1A73A7; color: white; padding: 0.9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    header h1 { font-size: 1.05rem; white-space: nowrap; }
+    .hactions { display: flex; gap: 0.6rem; flex-shrink: 0; }
+    .btn { padding: 0.45rem 1rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; display: inline-block; }
+    .btn-csv { background: #38a169; color: white; }
+    .btn-csv:hover { background: #276749; }
+    .btn-logout { background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.5); }
+    .btn-logout:hover { background: rgba(255,255,255,0.25); }
+    .container { max-width: 1400px; margin: 1.5rem auto; padding: 0 1rem; }
+    .meta { background: white; border-radius: 8px; padding: 0.6rem 1.25rem; margin-bottom: 1rem; font-size: 0.83rem; color: #718096; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .table-wrap { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th { background: #1A73A7; color: white; padding: 0.7rem 1rem; text-align: left; font-weight: 600; white-space: nowrap; }
+    td { padding: 0.65rem 1rem; border-bottom: 1px solid #e8ecf0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f7fafc; }
+    .td-time { white-space: nowrap; color: #718096; font-size: 0.78rem; min-width: 175px; }
+    .td-sid { white-space: nowrap; color: #a0aec0; font-size: 0.75rem; font-family: monospace; min-width: 80px; }
+    .td-q { max-width: 260px; word-break: break-word; }
+    .td-a { max-width: 500px; word-break: break-word; white-space: pre-wrap; color: #4a5568; }
+    .empty { text-align: center; padding: 3rem; color: #a0aec0; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🦷 ふじもと歯科 チャットログ</h1>
+  <div class="hactions">
+    <a href="/admin/logs/csv" class="btn btn-csv">⬇ CSVダウンロード</a>
+    <a href="/admin/logout" class="btn btn-logout">ログアウト</a>
+  </div>
+</header>
+<div class="container">
+  <div class="meta">合計 <strong>${logs.length}</strong> 件のログ（新しい順）</div>
+  <div class="table-wrap">
+    ${
+      logs.length === 0
+        ? '<div class="empty">まだログがありません</div>'
+        : `<table>
+        <thead>
+          <tr><th>日時（JST）</th><th>セッションID</th><th>質問</th><th>回答</th></tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>`
+    }
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+// ── Admin routes ──────────────────────────────────────────────────────────────
+
+app.get("/admin/logs", async (c) => {
+  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+  if (!adminPassword) {
+    return c.text("ADMIN_PASSWORD 環境変数が設定されていません", 500);
+  }
+  const token = getCookie(c, "admin_auth");
+  const expected = await hashAdminToken(adminPassword);
+  if (token !== expected) {
+    return c.html(loginPageHtml());
+  }
+  const logs = await fetchAllLogs();
+  return c.html(logsPageHtml(logs));
+});
+
+app.post("/admin/logs", async (c) => {
+  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+  if (!adminPassword) {
+    return c.text("ADMIN_PASSWORD 環境変数が設定されていません", 500);
+  }
+  const form = await c.req.formData();
+  const inputPw = form.get("password")?.toString() ?? "";
+  if (inputPw !== adminPassword) {
+    return c.html(loginPageHtml("パスワードが正しくありません"), 401);
+  }
+  const token = await hashAdminToken(adminPassword);
+  setCookie(c, "admin_auth", token, {
+    path: "/admin",
+    httpOnly: true,
+    secure: true,
+    sameSite: "Strict",
+    maxAge: 60 * 60 * 24,
+  });
+  return c.redirect("/admin/logs", 303);
+});
+
+app.get("/admin/logs/csv", async (c) => {
+  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+  if (!adminPassword) {
+    return c.redirect("/admin/logs", 303);
+  }
+  const token = getCookie(c, "admin_auth");
+  const expected = await hashAdminToken(adminPassword);
+  if (token !== expected) {
+    return c.redirect("/admin/logs", 303);
+  }
+  const logs = await fetchAllLogs();
+  const csv = buildCsv(logs);
+  const today = new Date(Date.now() + 9 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  return new Response("﻿" + csv, {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="chat-logs-${today}.csv"`,
+    },
+  });
+});
+
+app.get("/admin/logout", (c) => {
+  setCookie(c, "admin_auth", "", {
+    path: "/admin",
+    maxAge: 0,
+    httpOnly: true,
+    secure: true,
+  });
+  return c.redirect("/admin/logs", 303);
+});
+
+// ── Prompt builder ────────────────────────────────────────────────────────────
 
 function buildPrompt(treatment: string, patient: string, style: string): string {
   return `あなたはふじもと歯科（堺市）の患者説明資料を作成する専門アシスタントです。
