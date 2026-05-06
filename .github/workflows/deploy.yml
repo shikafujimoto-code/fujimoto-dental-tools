@@ -17,7 +17,7 @@ jobs:
 
       - uses: denoland/deployctl@v2
         with:
-          project: fujimoto-dental-tools
+          project: shikafujimoto-code19
           entrypoint: main.ts
         env:
           DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
