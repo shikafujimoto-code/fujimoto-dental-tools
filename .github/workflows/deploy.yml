@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: denoland/deployctl@v2
+      - uses: denoland/deployctl@v1
         with:
           project: shikafujimoto-code19
           entrypoint: main.ts
