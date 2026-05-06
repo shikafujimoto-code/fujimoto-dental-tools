@@ -203,7 +203,9 @@ app.post("/api/chat", async (c) => {
     }
 
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    console.log("[chat] ANTHROPIC_API_KEY:", apiKey ? `set (length=${apiKey.length})` : "NOT SET");
     if (!apiKey) {
+      console.error("[chat] ANTHROPIC_API_KEY is not configured");
       return c.json({ error: "APIキーが設定されていません" }, 500);
     }
 
@@ -211,6 +213,8 @@ app.post("/api/chat", async (c) => {
       ...history.slice(-8),
       { role: "user", content: message.trim() },
     ];
+
+    console.log("[chat] Calling Anthropic API, message length:", message.trim().length);
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -227,13 +231,16 @@ app.post("/api/chat", async (c) => {
       }),
     });
 
+    console.log("[chat] Anthropic API status:", response.status, response.statusText);
+
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Anthropic API error:", errText);
+      console.error("[chat] Anthropic API error - status:", response.status, "body:", errText);
       return c.json({ error: "AIの応答に失敗しました" }, 500);
     }
 
     const data = await response.json();
+    console.log("[chat] Anthropic API response received, content length:", data.content?.[0]?.text?.length ?? 0);
     const reply = data.content[0].text;
 
     if (kv) {
@@ -256,7 +263,9 @@ app.post("/api/chat", async (c) => {
 
     return c.json({ reply });
   } catch (err) {
-    console.error("Chat error:", err);
+    console.error("[chat] Unexpected error:", err);
+    console.error("[chat] Error type:", err instanceof Error ? err.constructor.name : typeof err);
+    console.error("[chat] Error message:", err instanceof Error ? err.message : String(err));
     return c.json({ error: "エラーが発生しました" }, 500);
   }
 });
