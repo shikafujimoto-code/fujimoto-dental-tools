@@ -141,6 +141,27 @@
       padding: 4px 12px 6px; background: white; flex-shrink: 0;
     }
 
+    .fdc-action-btns {
+      display: flex; flex-direction: column; gap: 8px;
+      align-self: flex-start; max-width: 88%;
+    }
+    .fdc-reserve-btn, .fdc-tel-btn {
+      display: flex; align-items: center; justify-content: center;
+      background: #1D9E75; color: white; text-decoration: none;
+      text-align: center; padding: 11px 20px; min-height: 44px;
+      border-radius: 22px; font-size: 0.88rem; font-weight: 700;
+      box-shadow: 0 3px 10px rgba(29,158,117,0.35);
+      transition: background 0.18s, transform 0.15s; line-height: 1.4;
+      font-family: inherit;
+    }
+    .fdc-reserve-btn:hover, .fdc-tel-btn:hover {
+      background: #178a64; transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(29,158,117,0.45);
+    }
+    .fdc-reserve-btn:active, .fdc-tel-btn:active {
+      transform: translateY(0); background: #137a58;
+    }
+
     @media (max-width: 420px) {
       #fdc-window { width: calc(100vw - 16px); right: 8px; bottom: 82px; }
       #fdc-btn { bottom: 16px; right: 12px; width: 52px; height: 52px; font-size: 22px; }
@@ -188,6 +209,34 @@
   const history = [];
   let loading = false;
   let initialized = false;
+
+  const RESERVATION_KEYWORDS = ['予約', '予約したい', '受診したい', '行きたい', '診てほしい'];
+
+  function hasReservationKeyword(text) {
+    return RESERVATION_KEYWORDS.some(kw => text.includes(kw));
+  }
+
+  function addReservationButtons() {
+    const container = document.createElement('div');
+    container.className = 'fdc-action-btns';
+
+    const webBtn = document.createElement('a');
+    webBtn.className = 'fdc-reserve-btn';
+    webBtn.href = 'https://reservation.stransa.co.jp/eb9670d9bd448af1cd591abf8e9d63d7';
+    webBtn.target = '_blank';
+    webBtn.rel = 'noopener noreferrer';
+    webBtn.textContent = '📅 WEB予約はこちら';
+
+    const telBtn = document.createElement('a');
+    telBtn.className = 'fdc-tel-btn';
+    telBtn.href = 'tel:050-1808-5701';
+    telBtn.textContent = '📞 お電話はこちら 050-1808-5701';
+
+    container.appendChild(webBtn);
+    container.appendChild(telBtn);
+    msgsEl.appendChild(container);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
 
   // ---- 診療時間判定 ----
   function getJSTNow() {
@@ -275,6 +324,8 @@
     const text = inputEl.value.trim();
     if (!text || loading) return;
 
+    const showReservation = hasReservationKeyword(text);
+
     loading = true;
     sendEl.disabled = true;
     inputEl.value = '';
@@ -295,6 +346,7 @@
       if (!res.ok) throw new Error(data.error || 'エラー');
 
       addBot(data.reply);
+      if (showReservation || hasReservationKeyword(data.reply)) addReservationButtons();
 
       history.push({ role: 'user', content: text });
       history.push({ role: 'assistant', content: data.reply });
@@ -303,6 +355,7 @@
     } catch (_) {
       hideTyping();
       addBot('申し訳ありません、一時的なエラーが発生しました。\nお電話（050-1808-5701）にてお問い合わせください。');
+      if (showReservation) addReservationButtons();
     } finally {
       loading = false;
       sendEl.disabled = false;
