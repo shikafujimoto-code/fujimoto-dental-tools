@@ -253,24 +253,22 @@ app.post("/api/chat", async (c) => {
 
 // ── Admin utilities ──────────────────────────────────────────────────────────
 
-function getAdminCookie(req: Request): string | undefined {
-  const cookieStr = req.headers.get("Cookie") ?? "";
-  for (const part of cookieStr.split(";")) {
-    const idx = part.indexOf("=");
-    if (idx === -1) continue;
-    if (part.slice(0, idx).trim() === "admin_auth") {
-      return part.slice(idx + 1).trim();
-    }
-  }
-  return undefined;
+function checkBasicAuth(req: Request): boolean {
+  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+  if (!adminPassword) return false;
+  const auth = req.headers.get("Authorization") ?? "";
+  if (!auth.startsWith("Basic ")) return false;
+  const decoded = atob(auth.slice(6));
+  const colon = decoded.indexOf(":");
+  const password = colon >= 0 ? decoded.slice(colon + 1) : decoded;
+  return password === adminPassword;
 }
 
-async function hashAdminToken(password: string): Promise<string> {
-  const data = new TextEncoder().encode("fjmt_admin_" + password);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+function unauthorizedResponse(): Response {
+  return new Response("Unauthorized", {
+    status: 401,
+    headers: { "WWW-Authenticate": `Basic realm="ふじもと歯科 管理者"` },
+  });
 }
 
 async function fetchAllLogs(): Promise<ChatLog[]> {
@@ -304,45 +302,6 @@ function buildCsv(logs: ChatLog[]): string {
     .join("\r\n");
 }
 
-function loginPageHtml(error?: string): string {
-  const errorHtml = error
-    ? `<div class="error">${escHtml(error)}</div>`
-    : "";
-  return `<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>管理者ログイン - ふじもと歯科</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .card { background: white; border-radius: 12px; padding: 2rem 2.5rem; box-shadow: 0 4px 16px rgba(0,0,0,0.12); width: 100%; max-width: 380px; }
-    h1 { font-size: 1.15rem; color: #1A73A7; margin-bottom: 1.5rem; text-align: center; }
-    label { display: block; font-size: 0.85rem; color: #4a5568; margin-bottom: 0.4rem; font-weight: 600; }
-    input[type=password] { width: 100%; padding: 0.7rem 1rem; border: 1.5px solid #cbd5e0; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
-    input[type=password]:focus { border-color: #1A73A7; }
-    button { width: 100%; padding: 0.8rem; background: #1A73A7; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: background 0.15s; }
-    button:hover { background: #125A8A; }
-    .error { background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>🦷 管理者ログイン</h1>
-    ${errorHtml}
-    <form method="POST" action="/admin/logs">
-      <div style="margin-bottom:1rem">
-        <label for="pw">パスワード</label>
-        <input type="password" id="pw" name="password" autofocus required>
-      </div>
-      <button type="submit">ログイン</button>
-    </form>
-  </div>
-</body>
-</html>`;
-}
-
 function logsPageHtml(logs: ChatLog[]): string {
   const rowsHtml = logs
     .map(
@@ -371,8 +330,6 @@ function logsPageHtml(logs: ChatLog[]): string {
     .btn { padding: 0.45rem 1rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; display: inline-block; }
     .btn-csv { background: #38a169; color: white; }
     .btn-csv:hover { background: #276749; }
-    .btn-logout { background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.5); }
-    .btn-logout:hover { background: rgba(255,255,255,0.25); }
     .container { max-width: 1400px; margin: 1.5rem auto; padding: 0 1rem; }
     .meta { background: white; border-radius: 8px; padding: 0.6rem 1.25rem; margin-bottom: 1rem; font-size: 0.83rem; color: #718096; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
     .table-wrap { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto; }
@@ -393,7 +350,6 @@ function logsPageHtml(logs: ChatLog[]): string {
   <h1>🦷 ふじもと歯科 チャットログ</h1>
   <div class="hactions">
     <a href="/admin/logs/csv" class="btn btn-csv">⬇ CSVダウンロード</a>
-    <a href="/admin/logout" class="btn btn-logout">ログアウト</a>
   </div>
 </header>
 <div class="container">
@@ -418,47 +374,13 @@ function logsPageHtml(logs: ChatLog[]): string {
 // ── Admin routes ──────────────────────────────────────────────────────────────
 
 app.get("/admin/logs", async (c) => {
-  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
-  if (!adminPassword) {
-    return c.text("ADMIN_PASSWORD 環境変数が設定されていません", 500);
-  }
-  const token = getAdminCookie(c.req.raw);
-  const expected = await hashAdminToken(adminPassword);
-  if (token !== expected) {
-    return c.html(loginPageHtml());
-  }
+  if (!checkBasicAuth(c.req.raw)) return unauthorizedResponse();
   const logs = await fetchAllLogs();
   return c.html(logsPageHtml(logs));
 });
 
-app.post("/admin/logs", async (c) => {
-  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
-  if (!adminPassword) {
-    return c.text("ADMIN_PASSWORD 環境変数が設定されていません", 500);
-  }
-  const form = await c.req.formData();
-  const inputPw = form.get("password")?.toString() ?? "";
-  if (inputPw !== adminPassword) {
-    return c.html(loginPageHtml("パスワードが正しくありません"), 401);
-  }
-  const token = await hashAdminToken(adminPassword);
-  const cookieVal = `admin_auth=${token}; Path=/admin; HttpOnly; Secure; SameSite=Strict; Max-Age=${60 * 60 * 24}`;
-  return new Response(null, {
-    status: 303,
-    headers: { "Location": "/admin/logs", "Set-Cookie": cookieVal },
-  });
-});
-
 app.get("/admin/logs/csv", async (c) => {
-  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
-  if (!adminPassword) {
-    return new Response(null, { status: 303, headers: { Location: "/admin/logs" } });
-  }
-  const token = getAdminCookie(c.req.raw);
-  const expected = await hashAdminToken(adminPassword);
-  if (token !== expected) {
-    return new Response(null, { status: 303, headers: { Location: "/admin/logs" } });
-  }
+  if (!checkBasicAuth(c.req.raw)) return unauthorizedResponse();
   const logs = await fetchAllLogs();
   const csv = buildCsv(logs);
   const today = new Date(Date.now() + 9 * 60 * 60 * 1000)
@@ -469,14 +391,6 @@ app.get("/admin/logs/csv", async (c) => {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="chat-logs-${today}.csv"`,
     },
-  });
-});
-
-app.get("/admin/logout", (_c) => {
-  const cookieVal = `admin_auth=; Path=/admin; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
-  return new Response(null, {
-    status: 303,
-    headers: { "Location": "/admin/logs", "Set-Cookie": cookieVal },
   });
 });
 
