@@ -277,7 +277,7 @@ function checkBasicAuth(req: Request): boolean {
 function unauthorizedResponse(): Response {
   return new Response("Unauthorized", {
     status: 401,
-    headers: { "WWW-Authenticate": `Basic realm="ふじもと歯科 管理者"` },
+    headers: { "WWW-Authenticate": `Basic realm="Admin"` },
   });
 }
 
