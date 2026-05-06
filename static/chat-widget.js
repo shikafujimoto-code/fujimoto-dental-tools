@@ -120,6 +120,22 @@
     #fdc-send:hover:not(:disabled) { background: #125A8A; }
     #fdc-send:disabled { background: #B0C4D0; cursor: not-allowed; }
 
+    #fdc-banner {
+      font-size: 0.78rem; font-weight: 600; text-align: center;
+      padding: 7px 14px; flex-shrink: 0; display: none;
+      line-height: 1.4;
+    }
+    #fdc-banner.fdc-banner-open {
+      display: block;
+      background: #e8f5e9; color: #2e7d32;
+      border-bottom: 1px solid #c8e6c9;
+    }
+    #fdc-banner.fdc-banner-closed {
+      display: block;
+      background: #fff3e0; color: #bf360c;
+      border-bottom: 1px solid #ffcc80;
+    }
+
     #fdc-notice {
       font-size: 0.65rem; color: #94A3B8; text-align: center;
       padding: 4px 12px 6px; background: white; flex-shrink: 0;
@@ -148,6 +164,7 @@
         </div>
         <button id="fdc-close" aria-label="閉じる">✕</button>
       </div>
+      <div id="fdc-banner"></div>
       <div id="fdc-msgs" aria-live="polite"></div>
       <div id="fdc-footer">
         <input id="fdc-input" type="text" placeholder="メッセージを入力..." maxlength="200" autocomplete="off" />
@@ -166,15 +183,51 @@
   const inputEl = document.getElementById('fdc-input');
   const sendEl  = document.getElementById('fdc-send');
 
+  const bannerEl = document.getElementById('fdc-banner');
+
   const history = [];
   let loading = false;
   let initialized = false;
+
+  // ---- 診療時間判定 ----
+  function getJSTNow() {
+    const now = new Date();
+    // UTC+9 に変換（ブラウザのタイムゾーンに依存せず常にJSTで判定）
+    return new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
+  }
+
+  function isOpen() {
+    const jst = getJSTNow();
+    const day = jst.getDay();        // 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+    const min = jst.getHours() * 60 + jst.getMinutes();
+
+    if (day === 0 || day === 3) return false; // 日・水は休診
+
+    if (day === 6) {
+      // 土: 9:30〜13:30 / 14:30〜18:00
+      return (min >= 570 && min < 810) || (min >= 870 && min < 1080);
+    }
+
+    // 月・火・木・金: 9:30〜13:30 / 15:00〜19:00
+    return (min >= 570 && min < 810) || (min >= 900 && min < 1140);
+  }
+
+  function updateBanner() {
+    if (isOpen()) {
+      bannerEl.className = 'fdc-banner-open';
+      bannerEl.textContent = '🟢 現在診療中です。お気軽にご相談ください';
+    } else {
+      bannerEl.className = 'fdc-banner-closed';
+      bannerEl.textContent = '🔴 現在休診中です。次回診療日にお電話ください（050-1808-5701）';
+    }
+  }
 
   function open() {
     winEl.classList.add('fdc-open');
     winEl.setAttribute('aria-hidden', 'false');
     btnEl.textContent = '✕';
     btnEl.setAttribute('aria-label', 'チャットを閉じる');
+    updateBanner();
     if (!initialized) {
       initialized = true;
       addBot('こんにちは！ふじもと歯科のAIアシスタントです。\n診療時間・料金・治療についてお気軽にご質問ください 😊');
