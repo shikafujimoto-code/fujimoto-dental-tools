@@ -33,10 +33,7 @@ app.get("/demo", async (c) => {
 
 app.get("/transcript", async (c) => {
   if (!checkBasicAuth(c.req.raw, "TRANSCRIPT_PASSWORD")) {
-    return new Response("Unauthorized", {
-      status: 401,
-      headers: { "WWW-Authenticate": `Basic realm="Transcript"` },
-    });
+    return unauthorizedResponse();
   }
   try {
     const html = await Deno.readTextFile("./static/transcript.html");
