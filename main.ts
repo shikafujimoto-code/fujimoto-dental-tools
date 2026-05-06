@@ -31,6 +31,21 @@ app.get("/demo", async (c) => {
   }
 });
 
+app.get("/transcript", async (c) => {
+  if (!checkBasicAuth(c.req.raw, "TRANSCRIPT_PASSWORD")) {
+    return new Response("Unauthorized", {
+      status: 401,
+      headers: { "WWW-Authenticate": `Basic realm="Transcript"` },
+    });
+  }
+  try {
+    const html = await Deno.readTextFile("./static/transcript.html");
+    return c.html(html);
+  } catch {
+    return c.text("transcript.html not found", 404);
+  }
+});
+
 app.get("/chat-widget.js", async (c) => {
   try {
     const js = await Deno.readTextFile("./static/chat-widget.js");
@@ -272,8 +287,8 @@ app.post("/api/chat", async (c) => {
 
 // ── Admin utilities ──────────────────────────────────────────────────────────
 
-function checkBasicAuth(req: Request): boolean {
-  const adminPassword = Deno.env.get("ADMIN_PASSWORD");
+function checkBasicAuth(req: Request, envKey = "ADMIN_PASSWORD"): boolean {
+  const adminPassword = Deno.env.get(envKey);
   if (!adminPassword) return false;
   const auth = req.headers.get("Authorization") ?? "";
   if (!auth.startsWith("Basic ")) return false;

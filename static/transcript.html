@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+:root{--bg:#f5f5f7;--card:rgba(255,255,255,0.82);--border:rgba(0,0,0,0.08);--text:#1d1d1f;--sub:#6e6e73;--ter:#a1a1a6;--blue:#0071e3;--blue-h:#0077ed;--blue-l:rgba(0,113,227,0.10);--green:#34c759;--green-l:rgba(52,199,89,0.12);--red:#ff3b30;--red-l:rgba(255,59,48,0.10);--orange:#ff9f0a;--orange-l:rgba(255,159,10,0.12);--sep:rgba(0,0,0,0.08);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;padding:28px 16px 48px;}
+.app{max-width:620px;margin:0 auto;}
+.header{text-align:center;margin-bottom:24px;animation:fu .6s ease both;}
+.icon-wrap{width:68px;height:68px;background:linear-gradient(145deg,#1c1c1e,#3a3a3c);border-radius:17px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 8px 28px rgba(0,0,0,0.18);}
+.icon-wrap svg{width:30px;height:30px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+h1{font-size:26px;font-weight:600;letter-spacing:-.5px;}
+.subh{font-size:14px;color:var(--sub);margin-top:5px;line-height:1.5;}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;background:var(--green-l);color:#1a7a37;margin-top:8px;}
+.card{background:var(--card);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--border);border-radius:22px;padding:20px 22px;margin-bottom:10px;animation:fu .6s ease both;}
+.clabel{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ter);margin-bottom:9px;}
+.field{position:relative;}
+.field svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--ter);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+input[type=password]{width:100%;height:42px;padding:0 12px 0 36px;background:rgba(0,0,0,0.04);border:1px solid var(--sep);border-radius:10px;font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border .2s,box-shadow .2s;}
+input[type=password]:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
+input::placeholder{color:var(--ter);}
+.upload-zone{border:2px dashed var(--sep);border-radius:16px;padding:36px 16px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(0,113,227,0.02);}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--blue);background:var(--blue-l);}
+.uz-icon{display:flex;justify-content:center;margin-bottom:10px;}
+.uz-icon svg{width:36px;height:36px;stroke:var(--blue);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.uz-title{font-size:15px;font-weight:500;}
+.uz-sub{font-size:12px;color:var(--sub);margin-top:4px;}
+#file-input{display:none;}
+.file-pill{display:none;align-items:center;gap:9px;background:rgba(0,0,0,0.04);border:1px solid var(--sep);border-radius:100px;padding:7px 14px;font-size:13px;margin-top:10px;overflow:hidden;}
+.file-pill.show{display:flex;}
+.pill-name{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;white-space:nowrap;}
+.tag-blue{background:var(--blue-l);color:var(--blue);}
+.tag-orange{background:var(--orange-l);color:var(--orange);}
+.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.opt label{font-size:12px;font-weight:500;color:var(--sub);display:block;margin-bottom:5px;}
+select{width:100%;height:35px;padding:0 9px;background:rgba(0,0,0,0.04);border:1px solid var(--sep);border-radius:9px;font-size:13px;color:var(--text);font-family:inherit;cursor:pointer;outline:none;}
+.run-btn{width:100%;height:48px;background:var(--blue);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:500;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s,box-shadow .15s;box-shadow:0 4px 16px rgba(0,113,227,0.28);margin-bottom:10px;animation:fu .6s .12s ease both;}
+.run-btn:hover:not(:disabled){background:var(--blue-h);box-shadow:0 6px 22px rgba(0,113,227,0.36);}
+.run-btn:active:not(:disabled){transform:scale(0.987);}
+.run-btn:disabled{opacity:.42;cursor:not-allowed;}
+.err-pill{display:none;align-items:center;gap:9px;background:var(--red-l);border:1px solid rgba(255,59,48,0.2);border-radius:14px;padding:12px 15px;font-size:13px;color:var(--red);margin-bottom:10px;line-height:1.55;}
+.err-pill.show{display:flex;}
+.progress-card{display:none;}.progress-card.show{display:block;}
+.prog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.plabel{font-size:14px;font-weight:500;}.ppct{font-size:14px;font-weight:600;color:var(--blue);}
+.bar-bg{height:5px;background:rgba(0,0,0,0.08);border-radius:100px;overflow:hidden;margin-bottom:18px;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),#5ac8fa);border-radius:100px;transition:width .4s ease;}
+.chunk-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
+.cpill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:100px;font-size:12px;font-weight:500;border:1px solid var(--sep);background:rgba(0,0,0,0.04);color:var(--sub);transition:all .2s;}
+.cpill.active{background:var(--blue-l);border-color:rgba(0,113,227,.2);color:var(--blue);}
+.cpill.done{background:var(--green-l);border-color:rgba(52,199,89,.2);color:#1a7a37;}
+.cpill.err{background:var(--red-l);border-color:rgba(255,59,48,.2);color:var(--red);}
+.phase-list{list-style:none;}
+.phase-item{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--sep);font-size:13px;color:var(--sub);}
+.phase-item:last-child{border-bottom:none;}
+.pdot{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(0,0,0,0.06);font-size:11px;transition:all .3s;}
+.pdot.active{background:var(--blue-l);animation:spin 1s linear infinite;}
+.pdot.done{background:var(--green-l);}
+.pdot.err{background:var(--red-l);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.results-card{display:none;}.results-card.show{display:block;}
+.seg-ctrl{display:flex;background:rgba(0,0,0,0.06);border-radius:9px;padding:3px;gap:2px;margin-bottom:16px;}
+.seg-btn{flex:1;height:30px;border:none;background:transparent;border-radius:7px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .15s;font-family:inherit;}
+.seg-btn.active{background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+.rpanel{display:none;}.rpanel.active{display:block;}
+.text-box{background:rgba(0,0,0,0.03);border:1px solid var(--sep);border-radius:14px;padding:14px;font-size:13px;line-height:1.75;color:var(--text);max-height:260px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-family:inherit;}
+.sblock{margin-bottom:16px;}
+.sblock-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ter);margin-bottom:7px;}
+.sblock-text{font-size:14px;line-height:1.65;color:var(--text);}
+.pts{list-style:none;}
+.pts li{display:flex;gap:9px;align-items:flex-start;padding:5px 0;font-size:13px;color:var(--text);border-bottom:1px solid var(--sep);}
+.pts li:last-child{border-bottom:none;}
+.pts li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:7px;}
+.act-row{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap;}
+.act-btn{display:flex;align-items:center;gap:6px;padding:0 14px;height:34px;background:rgba(0,0,0,0.05);border:1px solid var(--sep);border-radius:100px;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;transition:background .15s;font-family:inherit;}
+.act-btn:hover{background:rgba(0,0,0,0.09);}
+@keyframes fu{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+  <div class="icon-wrap">
+    <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10a7 7 0 0 1-14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
+  </div>
+  <h1>Transcript</h1>
+  <p class="subh">大容量セミナー動画を文字起こし＆AI要約</p>
+  <span class="badge">✓ OpenAI APIキー1つで完結（CORS問題解決済み）</span>
+</div>
+
+<div class="card" style="animation-delay:0s">
+  <div class="clabel">OpenAI API Key</div>
+  <div class="field">
+    <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+    <input type="password" id="openai-key" placeholder="sk-..." />
+  </div>
+  <p style="font-size:12px;color:var(--ter);margin-top:8px;">文字起こし（Whisper）＋要約（GPT-4o-mini）をこのキー1つで処理します</p>
+</div>
+
+<div class="card" style="animation-delay:0.04s">
+  <div class="clabel">音声・動画ファイル</div>
+  <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div class="uz-icon">
+      <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+    </div>
+    <div class="uz-title">クリックまたはドラッグ＆ドロップ</div>
+    <div class="uz-sub">MP4, MOV, MP3, M4A, WAV, WebM — 容量制限なし（自動分割）</div>
+  </div>
+  <input type="file" id="file-input" accept="audio/*,video/*" />
+  <div class="file-pill" id="file-pill">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <span class="pill-name" id="pill-name"></span>
+    <span class="tag tag-blue" id="pill-size"></span>
+    <span class="tag tag-orange" id="pill-chunks" style="display:none"></span>
+  </div>
+</div>
+
+<div class="card" style="animation-delay:0.08s">
+  <div class="clabel">設定</div>
+  <div class="opts">
+    <div class="opt"><label>言語</label>
+      <select id="lang-select"><option value="ja">日本語</option><option value="en">English</option><option value="auto">自動検出</option></select></div>
+    <div class="opt"><label>分割サイズ</label>
+      <select id="chunk-size"><option value="20">20 MB（推奨）</option><option value="15">15 MB</option><option value="10">10 MB</option></select></div>
+    <div class="opt"><label>要約スタイル</label>
+      <select id="summary-style"><option value="standard">標準</option><option value="detailed">詳細</option><option value="short">短縮</option></select></div>
+  </div>
+</div>
+
+<button class="run-btn" id="run-btn" onclick="runPipeline()">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+  文字起こしを開始
+</button>
+
+<div class="err-pill" id="err-pill">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span id="err-text"></span>
+</div>
+
+<div class="card progress-card" id="progress-card" style="animation-delay:0s">
+  <div class="prog-head"><span class="plabel" id="plabel">準備中...</span><span class="ppct" id="ppct">0%</span></div>
+  <div class="bar-bg"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+  <div class="chunk-row" id="chunk-row"></div>
+  <ul class="phase-list">
+    <li class="phase-item"><div class="pdot" id="pd-decode">🔊</div><span>音声をデコード（Web Audio API）</span></li>
+    <li class="phase-item"><div class="pdot" id="pd-encode">✂️</div><span>WAVに変換・分割</span></li>
+    <li class="phase-item"><div class="pdot" id="pd-whisper">⌨️</div><span>Whisper APIで文字起こし</span></li>
+    <li class="phase-item"><div class="pdot" id="pd-merge">📋</div><span>テキストを結合</span></li>
+    <li class="phase-item"><div class="pdot" id="pd-summary">✨</div><span>GPT-4o-miniで要約生成</span></li>
+  </ul>
+</div>
+
+<div class="card results-card" id="results-card" style="animation-delay:0s">
+  <div class="seg-ctrl">
+    <button class="seg-btn active" onclick="switchR('summary')">要約</button>
+    <button class="seg-btn" onclick="switchR('transcript')">全文テキスト</button>
+  </div>
+  <div class="rpanel active" id="rp-summary">
+    <div class="sblock"><div class="sblock-label">要旨</div><div class="sblock-text" id="s-ov"></div></div>
+    <div class="sblock"><div class="sblock-label">主要ポイント</div><ul class="pts" id="s-pts"></ul></div>
+    <div class="sblock"><div class="sblock-label">結論・アクション</div><div class="sblock-text" id="s-ac"></div></div>
+  </div>
+  <div class="rpanel" id="rp-transcript"><div class="text-box" id="tx-box"></div></div>
+  <div class="act-row">
+    <button class="act-btn" onclick="copyT('summary')">📋 要約コピー</button>
+    <button class="act-btn" onclick="copyT('transcript')">📋 全文コピー</button>
+    <button class="act-btn" onclick="dlText()">⬇️ テキスト保存</button>
+  </div>
+</div>
+
+</div>
+<script>
+let currentFile=null, transcriptText='', summaryData={}, chunkWavBlobs=[], audioBuffer=null;
+
+const fi=document.getElementById('file-input');
+fi.addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0]);});
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0]);});
+
+function setFile(f){
+  currentFile=f; chunkWavBlobs=[]; audioBuffer=null;
+  const mb=f.size/1024/1024;
+  const csz=parseInt(document.getElementById('chunk-size').value);
+  document.getElementById('pill-name').textContent=f.name;
+  document.getElementById('pill-size').textContent=mb.toFixed(1)+' MB';
+  const pc=document.getElementById('pill-chunks');
+  if(mb>csz){pc.style.display='';pc.textContent='自動分割処理';}
+  else pc.style.display='none';
+  document.getElementById('file-pill').classList.add('show');
+}
+document.getElementById('chunk-size').addEventListener('change',()=>{if(currentFile)setFile(currentFile);});
+
+const phaseEmoji={decode:'🔊',encode:'✂️',whisper:'⌨️',merge:'📋',summary:'✨'};
+function setPhase(id,state){
+  const el=document.getElementById('pd-'+id);
+  el.className='pdot '+state;
+  if(state==='active')el.textContent='⏳';
+  else if(state==='done')el.textContent='✅';
+  else if(state==='err')el.textContent='❌';
+  else el.textContent=phaseEmoji[id]||'';
+}
+function setBar(pct,label){
+  document.getElementById('bar-fill').style.width=pct+'%';
+  document.getElementById('ppct').textContent=Math.round(pct)+'%';
+  document.getElementById('plabel').textContent=label;
+}
+function showErr(msg){
+  document.getElementById('err-text').textContent=msg;
+  document.getElementById('err-pill').classList.add('show');
+}
+
+// WAVエンコーダー（16kHz モノラル）
+function encodeWAV(audioBuffer,startSample,endSample){
+  const sr=16000, nc=1;
+  const length=endSample-startSample;
+  const buf=new ArrayBuffer(44+length*2);
+  const v=new DataView(buf);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF'); v.setUint32(4,36+length*2,true); ws(8,'WAVE');
+  ws(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true);
+  v.setUint16(22,nc,true); v.setUint32(24,sr,true); v.setUint32(28,sr*nc*2,true);
+  v.setUint16(32,nc*2,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40,length*2,true);
+  const src=audioBuffer.getChannelData(0);
+  const ratio=audioBuffer.sampleRate/sr;
+  let offset=44;
+  for(let i=0;i<length;i++){
+    const si=Math.round((startSample+i)*ratio);
+    const s=Math.max(-1,Math.min(1,src[Math.min(si,src.length-1)]));
+    v.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true); offset+=2;
+  }
+  return new Blob([buf],{type:'audio/wav'});
+}
+
+async function runPipeline(){
+  const apiKey=document.getElementById('openai-key').value.trim();
+  if(!apiKey){showErr('OpenAI APIキーを入力してください。');return;}
+  if(!currentFile){showErr('ファイルを選択してください。');return;}
+
+  document.getElementById('err-pill').classList.remove('show');
+  document.getElementById('results-card').classList.remove('show');
+  document.getElementById('progress-card').classList.add('show');
+  document.getElementById('run-btn').disabled=true;
+  ['decode','encode','whisper','merge','summary'].forEach(s=>setPhase(s,'wait'));
+
+  try{
+    const chunkMB=parseInt(document.getElementById('chunk-size').value);
+    const lang=document.getElementById('lang-select').value;
+    const style=document.getElementById('summary-style').value;
+
+    // Step1: デコード
+    setPhase('decode','active'); setBar(3,'音声をデコード中...');
+    const arrayBuf=await currentFile.arrayBuffer();
+    const audioCtx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+    let decoded;
+    try{ decoded=await audioCtx.decodeAudioData(arrayBuf); }
+    catch(e){ throw new Error('音声のデコードに失敗しました。MP4・MP3・WAV・M4A形式をお試しください。'); }
+    audioCtx.close();
+    setPhase('decode','done');
+
+    // Step2: 分割
+    setPhase('encode','active'); setBar(15,'WAVに変換・分割中...');
+    const bytesPerSec=16000*2;
+    const chunkSecs=(chunkMB*1024*1024)/bytesPerSec;
+    const totalChunks=Math.max(1,Math.ceil(decoded.length/decoded.sampleRate/chunkSecs));
+    const row=document.getElementById('chunk-row'); row.innerHTML=''; chunkWavBlobs=[];
+    for(let i=0;i<totalChunks;i++){
+      if(totalChunks>1){const p=document.createElement('div');p.className='cpill';p.id='cp-'+i;p.textContent='Part '+(i+1);row.appendChild(p);}
+      const s0=Math.round(i*chunkSecs*decoded.sampleRate);
+      const s1=Math.min(Math.round((i+1)*chunkSecs*decoded.sampleRate),decoded.length);
+      chunkWavBlobs.push(encodeWAV(decoded,s0,s1));
+    }
+    setPhase('encode','done');
+
+    // Step3: Whisper
+    setPhase('whisper','active');
+    const parts=[];
+    for(let i=0;i<totalChunks;i++){
+      const cp=document.getElementById('cp-'+i);
+      if(cp)cp.className='cpill active';
+      setBar(20+(i/totalChunks)*55,'文字起こし中... ('+(i+1)+'/'+totalChunks+')');
+      const fd=new FormData();
+      fd.append('file',chunkWavBlobs[i],'audio_'+(i+1)+'.wav');
+      fd.append('model','whisper-1');
+      if(lang!=='auto')fd.append('language',lang);
+      fd.append('response_format','text');
+      const res=await fetch('https://api.openai.com/v1/audio/transcriptions',{
+        method:'POST',headers:{'Authorization':'Bearer '+apiKey},body:fd
+      });
+      if(!res.ok){
+        const e=await res.json().catch(()=>({}));
+        if(cp)cp.className='cpill err';
+        throw new Error('Whisper APIエラー: '+(e.error?.message||res.status));
+      }
+      parts.push((await res.text()).trim());
+      if(cp)cp.className='cpill done';
+    }
+    setPhase('whisper','done');
+
+    // Step4: 結合
+    setPhase('merge','active'); setBar(78,'テキストを結合中...');
+    transcriptText=parts.join('\n\n');
+    setPhase('merge','done');
+
+    // Step5: GPT-4o-miniで要約（OpenAI APIはCORSで直接OK）
+    setPhase('summary','active'); setBar(83,'GPT-4o-miniで要約生成中...');
+    const stylePrompt={
+      standard:'要旨（100〜150字）、主要ポイント（5〜7項目の箇条書き）、結論・アクション（50〜80字）の3パートで。',
+      detailed:'要旨（200字）、主要ポイント（10項目）、結論・アクション（100字）を含めて。',
+      short:'要旨（50字以内）、主要ポイント（3項目）、結論（30字以内）のみ。'
+    }[style];
+
+    const cr=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+apiKey,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'gpt-4o-mini',
+        messages:[
+          {role:'system',content:`セミナー要約専門AI。JSON形式のみで返す。キー:"overview"(文字列),"points"(配列),"action"(文字列)。${stylePrompt}JSONのみ。前置き不要。`},
+          {role:'user',content:'以下を要約:\n\n'+transcriptText.slice(0,8000)}
+        ],
+        response_format:{type:'json_object'},
+        max_tokens:1000
+      })
+    });
+    if(!cr.ok){
+      const e=await cr.json().catch(()=>({}));
+      throw new Error('要約APIエラー: '+(e.error?.message||cr.status));
+    }
+    const cd=await cr.json();
+    summaryData=JSON.parse(cd.choices[0].message.content);
+    setPhase('summary','done');
+    setBar(100,'完了しました！');
+    renderResults();
+
+  }catch(e){
+    showErr(e.message);
+    ['decode','encode','whisper','merge','summary'].forEach(s=>{
+      const el=document.getElementById('pd-'+s);
+      if(el&&el.className.includes('active'))setPhase(s,'err');
+    });
+  }finally{
+    document.getElementById('run-btn').disabled=false;
+  }
+}
+
+function renderResults(){
+  document.getElementById('results-card').classList.add('show');
+  document.getElementById('s-ov').textContent=summaryData.overview||'';
+  const ul=document.getElementById('s-pts');ul.innerHTML='';
+  (summaryData.points||[]).forEach(p=>{const li=document.createElement('li');li.textContent=p;ul.appendChild(li);});
+  document.getElementById('s-ac').textContent=summaryData.action||'';
+  document.getElementById('tx-box').textContent=transcriptText;
+  switchR('summary');
+}
+function switchR(tab){
+  document.querySelectorAll('.seg-btn').forEach((b,i)=>b.classList.toggle('active',['summary','transcript'][i]===tab));
+  document.querySelectorAll('.rpanel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('rp-'+tab).classList.add('active');
+}
+function copyT(type){
+  const t=type==='summary'
+    ?'【要旨】\n'+summaryData.overview+'\n\n【ポイント】\n'+(summaryData.points||[]).map((p,i)=>`${i+1}. ${p}`).join('\n')+'\n\n【結論】\n'+summaryData.action
+    :transcriptText;
+  navigator.clipboard.writeText(t).then(()=>alert('コピーしました'));
+}
+function dlText(){
+  const t='【文字起こし全文】\n\n'+transcriptText+'\n\n---\n\n【要旨】\n'+summaryData.overview+'\n\n【ポイント】\n'+(summaryData.points||[]).map((p,i)=>`${i+1}. ${p}`).join('\n')+'\n\n【結論】\n'+summaryData.action;
+  const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(t);a.download='transcript.txt';a.click();
+}
+</script>
+</body>
+</html>
