@@ -19,3 +19,5 @@ jobs:
         with:
           project: fujimoto-dental-tools
           entrypoint: main.ts
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
