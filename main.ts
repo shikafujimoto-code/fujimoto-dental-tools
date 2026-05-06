@@ -479,4 +479,150 @@ ${style}
 患者説明資料を作成してください。`;
 }
 
+// ── Blog ─────────────────────────────────────────────────────────────────────
+
+interface BlogSettings {
+  clinicName: string;
+  clinicType: "dental" | "medical";
+  websites: Array<{ name: string; url: string }>;
+  areas: string[];
+}
+
+interface BlogArticle {
+  id: string;
+  title: string;
+  specialty: string;
+  keywords: string[];
+  status: "draft" | "published";
+  phase: number;
+  outline: string;
+  content: string;
+  metaTitle: string;
+  metaDescription: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+app.get("/blog", async (c) => {
+  if (!checkBasicAuth(c.req.raw, "BLOG_PASSWORD")) return unauthorizedResponse();
+  try {
+    const html = await Deno.readTextFile("./static/blog.html");
+    return c.html(html);
+  } catch {
+    return c.text("blog.html not found", 404);
+  }
+});
+
+app.get("/api/blog/settings", async (c) => {
+  if (!kv) return c.json({ error: "KV利用不可" }, 500);
+  const entry = await kv.get<BlogSettings>(["blog_settings"]);
+  return c.json(entry.value ?? { clinicName: "", clinicType: "dental", websites: [], areas: [] });
+});
+
+app.put("/api/blog/settings", async (c) => {
+  if (!kv) return c.json({ error: "KV利用不可" }, 500);
+  const body = await c.req.json<BlogSettings>();
+  await kv.set(["blog_settings"], body);
+  return c.json({ ok: true });
+});
+
+app.get("/api/blog/articles", async (c) => {
+  if (!kv) return c.json({ error: "KV利用不可" }, 500);
+  const articles: BlogArticle[] = [];
+  const iter = kv.list<BlogArticle>({ prefix: ["blog_articles"] });
+  for await (const entry of iter) articles.push(entry.value);
+  articles.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return c.json(articles);
+});
+
+app.post("/api/blog/articles", async (c) => {
+  if (!kv) return c.json({ error: "KV利用不可" }, 500);
+  const body = await c.req.json<Partial<BlogArticle>>();
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const article: BlogArticle = {
+    id, title: body.title ?? "", specialty: body.specialty ?? "",
+    keywords: body.keywords ?? [], status: "draft", phase: 0,
+    outline: "", content: "", metaTitle: "", metaDescription: "", tags: [],
+    createdAt: now, updatedAt: now,
+  };
+  await kv.set(["blog_articles", id], article);
+  return c.json(article, 201);
+});
+
+app.get("/api/blog/articles/:id", async (c) => {
+  if (!kv) return c.json({ error: "KV利用不可" }, 500);
+  const id = c.req.param("id");
+  const entry = await kv.get<BlogArticle>(["blog_articles", id]);
+  if (!entry.value) return c.json({ error: "記事が見つかりません" }, 404);
+  return c.json(entry.value);
+});
+
+app.put("/api/blog/articles/:id", async (c) => {
+  if (!kv) return c.json({ error: "KV利用不可" }, 500);
+  const id = c.req.param("id");
+  const entry = await kv.get<BlogArticle>(["blog_articles", id]);
+  if (!entry.value) return c.json({ error: "記事が見つかりません" }, 404);
+  const body = await c.req.json<Partial<BlogArticle>>();
+  const updated: BlogArticle = { ...entry.value, ...body, id, updatedAt: new Date().toISOString() };
+  await kv.set(["blog_articles", id], updated);
+  return c.json(updated);
+});
+
+app.delete("/api/blog/articles/:id", async (c) => {
+  if (!kv) return c.json({ error: "KV利用不可" }, 500);
+  const id = c.req.param("id");
+  await kv.delete(["blog_articles", id]);
+  return c.json({ ok: true });
+});
+
+app.post("/api/blog/generate", async (c) => {
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) return c.json({ error: "OPENAI_API_KEY が設定されていません" }, 500);
+
+  const body = await c.req.json<{ phase: 1 | 2 | 3; article: Partial<BlogArticle>; settings: BlogSettings }>();
+  const { phase, article, settings } = body;
+
+  const clinicInfo = [
+    `クリニック名: ${settings.clinicName}`,
+    `種別: ${settings.clinicType === "dental" ? "歯科クリニック" : "医科クリニック"}`,
+    settings.areas?.length ? `対象エリア: ${settings.areas.join("・")}` : "",
+    settings.websites?.length ? `サイト: ${settings.websites.map((w) => `${w.name} ${w.url}`).join(", ")}` : "",
+  ].filter(Boolean).join("\n");
+
+  let systemPrompt: string, userPrompt: string, maxTokens: number;
+
+  if (phase === 1) {
+    systemPrompt = `あなたは歯科・医科専門のSEOブログライターです。E-E-A-Tを意識した記事構成案を作成します。`;
+    userPrompt = `以下の条件でSEOブログ記事の構成案をMarkdownで作成してください。\n\n【クリニック情報】\n${clinicInfo}\n\n【診療科目】${article.specialty}\n【メインキーワード】${article.keywords?.join("、")}\n\n出力形式:\n# タイトル（32〜38文字、キーワードを含む）\n\n## リード文（150字程度）\n\n## 記事構成\n### H2: 見出し\n概要: （1〜2行）\n\n（H2を4〜6個作成）`;
+    maxTokens = 1200;
+  } else if (phase === 2) {
+    systemPrompt = `あなたは歯科・医科専門のSEOブログライターです。「${settings.clinicName}では」「当院では」などの表現を適度に使い、医療広告ガイドラインに従って執筆します。`;
+    userPrompt = `以下の構成案をもとに記事本文を執筆してください。\n\n【クリニック情報】\n${clinicInfo}\n\n【構成案】\n${article.outline}\n\n要件: 2500〜3500文字、Markdown形式、読者の不安を解消し来院を自然に促す流れ`;
+    maxTokens = 4096;
+  } else {
+    systemPrompt = `あなたはSEOの専門家です。JSONのみで返答してください。`;
+    userPrompt = `以下の記事からSEOメタ情報を生成してください。\n\n【診療科目】${article.specialty}\n【キーワード】${article.keywords?.join("、")}\n\n【本文抜粋】\n${article.content?.slice(0, 3000)}\n\nJSONのみ:\n{"metaTitle":"（35〜40文字）","metaDescription":"（110〜120文字）","tags":["タグ1","タグ2","タグ3","タグ4","タグ5"]}`;
+    maxTokens = 600;
+  }
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+        max_tokens: maxTokens,
+      }),
+    });
+    if (!res.ok) return c.json({ error: "OpenAI APIエラー: " + await res.text() }, 500);
+    const data = await res.json();
+    return c.json({ result: data.choices[0].message.content, phase });
+  } catch (err) {
+    return c.json({ error: String(err) }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Blog — ふじもと歯科</title>
+<style>
+:root{--blue:#0071e3;--blue-h:#0077ed;--blue-l:rgba(0,113,227,.10);--green:#34c759;--green-l:rgba(52,199,89,.12);--orange:#ff9f0a;--orange-l:rgba(255,159,10,.12);--red:#ff3b30;--red-l:rgba(255,59,48,.10);--text:#1d1d1f;--sub:#6e6e73;--ter:#a1a1a6;--sep:rgba(0,0,0,.06);--border:rgba(0,0,0,.09);--bg:#f5f5f7;--sw:220px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;height:100vh;overflow:hidden;}
+.layout{display:flex;height:100vh;}
+/* Sidebar */
+.sb{width:var(--sw);background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sb-brand{padding:20px 18px 14px;border-bottom:1px solid var(--sep);}
+.sb-logo{font-size:15px;font-weight:700;color:var(--blue);letter-spacing:-.3px;}
+.sb-sub{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.4;}
+.sb-nav{padding:10px 8px;flex:1;}
+.nav-new{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:var(--blue);cursor:pointer;margin-bottom:6px;transition:background .15s;}
+.nav-new:hover{background:var(--blue-h);}
+.nav-new svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .15s;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{background:var(--blue-l);color:var(--blue);}
+.nav-item svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.nav-sep{height:1px;background:var(--sep);margin:6px 0;}
+/* Main */
+.main{flex:1;overflow-y:auto;}
+.page{padding:32px 36px;max-width:1060px;}
+.ph{margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.pt{font-size:24px;font-weight:700;letter-spacing:-.4px;}
+.ps{font-size:14px;color:var(--sub);margin-top:4px;}
+/* Cards */
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:14px;}
+.ctitle{font-size:12px;font-weight:600;color:var(--sub);margin-bottom:14px;display:flex;align-items:center;gap:7px;letter-spacing:.03em;}
+.ctitle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.stat-v{font-size:28px;font-weight:700;letter-spacing:-.5px;}
+.stat-l{font-size:12px;color:var(--sub);margin-top:3px;}
+/* Table */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ter);padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+td{padding:11px 12px;border-bottom:1px solid var(--sep);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.td-title{font-weight:500;max-width:260px;}
+.atitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.akw{font-size:11px;color:var(--ter);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+/* Badges */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;white-space:nowrap;}
+.bg-green{background:var(--green-l);color:#1a7a37;}
+.bg-orange{background:var(--orange-l);color:#a05a00;}
+.bg-gray{background:rgba(0,0,0,.06);color:var(--sub);}
+.bg-blue{background:var(--blue-l);color:var(--blue);}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:0 16px;height:36px;border-radius:10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+.btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.btn-p{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(0,113,227,.25);}
+.btn-p:hover{background:var(--blue-h);}
+.btn-p:disabled{opacity:.42;cursor:not-allowed;}
+.btn-s{background:rgba(0,0,0,.06);color:var(--text);}
+.btn-s:hover{background:rgba(0,0,0,.1);}
+.btn-d{background:var(--red-l);color:var(--red);border:1px solid rgba(255,59,48,.2);}
+.btn-d:hover{background:rgba(255,59,48,.18);}
+.btn-sm{height:28px;padding:0 12px;font-size:12px;border-radius:8px;}
+.btn-g{background:transparent;color:var(--blue);border:1px solid var(--blue-l);}
+.btn-g:hover{background:var(--blue-l);}
+.btn-gen{background:linear-gradient(135deg,var(--blue),#5ac8fa);color:#fff;height:40px;font-size:14px;font-weight:600;box-shadow:0 3px 12px rgba(0,113,227,.3);padding:0 20px;}
+.btn-gen:hover:not(:disabled){box-shadow:0 5px 18px rgba(0,113,227,.4);transform:translateY(-1px);}
+.btn-gen:disabled{opacity:.42;cursor:not-allowed;transform:none;}
+.btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+/* Forms */
+.fg{margin-bottom:16px;}
+.fl{font-size:12px;font-weight:600;color:var(--sub);display:block;margin-bottom:6px;letter-spacing:.03em;}
+.fl.req::after{content:" *";color:var(--red);}
+input[type=text],select,textarea{width:100%;padding:10px 13px;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.10);border-radius:10px;font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border .2s,box-shadow .2s;}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
+textarea{resize:vertical;line-height:1.65;}
+input::placeholder,textarea::placeholder{color:var(--ter);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fhint{font-size:11px;color:var(--ter);margin-top:5px;}
+/* Tag input */
+.kw-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.10);border-radius:10px;min-height:42px;cursor:text;transition:border .2s,box-shadow .2s;}
+.kw-wrap.focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
+.kw-chip{display:inline-flex;align-items:center;gap:4px;background:var(--blue-l);color:var(--blue);border-radius:100px;padding:3px 10px;font-size:12px;font-weight:500;}
+.kw-rm{cursor:pointer;opacity:.7;font-size:15px;line-height:1;}
+.kw-rm:hover{opacity:1;}
+.kw-in{border:none;outline:none;background:transparent;font-size:14px;font-family:inherit;color:var(--text);min-width:120px;flex:1;}
+/* Phase cards */
+.pc{border:1px solid var(--border);border-radius:16px;background:#fff;margin-bottom:12px;overflow:hidden;}
+.pc-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:rgba(0,0,0,.02);border-bottom:1px solid var(--border);}
+.pc-hl{display:flex;align-items:center;gap:10px;}
+.pnum{width:28px;height:28px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.pnum.done{background:var(--green-l);color:#1a7a37;}
+.pnum.lock{background:rgba(0,0,0,.06);color:var(--ter);}
+.ptitle{font-size:14px;font-weight:600;}
+.pdesc{font-size:12px;color:var(--sub);margin-top:1px;}
+.pc-body{padding:18px 20px;}
+.pc-lock{padding:18px 20px;font-size:13px;color:var(--ter);display:flex;align-items:center;gap:8px;}
+.pc-lock svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+/* Meta */
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.cc{font-size:11px;color:var(--ter);text-align:right;margin-top:3px;}
+.cc.ok{color:var(--green);}
+.cc.warn{color:var(--orange);}
+.tags-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.tag-pill{background:rgba(0,0,0,.05);color:var(--sub);padding:3px 10px;border-radius:100px;font-size:12px;}
+/* Settings */
+.url-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.url-item{display:flex;gap:8px;align-items:center;}
+.url-name{width:120px;flex-shrink:0;}
+.area-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.area-chip{display:inline-flex;align-items:center;gap:5px;background:var(--blue-l);color:var(--blue);border-radius:100px;padding:5px 12px;font-size:13px;font-weight:500;}
+.area-rm{cursor:pointer;font-size:16px;line-height:1;opacity:.7;}
+.area-rm:hover{opacity:1;}
+.add-row{display:flex;gap:8px;}
+/* Toggle */
+.tgl-group{display:flex;background:rgba(0,0,0,.06);border-radius:9px;padding:3px;gap:2px;width:fit-content;margin-bottom:14px;}
+.tgl-btn{height:32px;padding:0 18px;border:none;background:transparent;border-radius:7px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .15s;font-family:inherit;}
+.tgl-btn.active{background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.1);}
+/* Filter bar */
+.fbar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+.fbar select{width:auto;height:34px;padding:0 10px;font-size:13px;}
+/* Empty */
+.empty{text-align:center;padding:48px 24px;color:var(--ter);}
+.empty-t{font-size:15px;font-weight:500;color:var(--sub);margin-bottom:6px;}
+.empty-s{font-size:13px;}
+/* Spinner */
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .8s linear infinite;flex-shrink:0;}
+@keyframes rot{to{transform:rotate(360deg);}}
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#1d1d1f;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:1000;animation:su .3s ease;}
+.toast.ok{background:#1a7a37;}
+.toast.err{background:var(--red);}
+@keyframes su{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+/* Dialog */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:2000;}
+.dlg{background:#fff;border-radius:16px;padding:24px;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.dlg-t{font-size:16px;font-weight:600;margin-bottom:10px;}
+.dlg-b{font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:20px;}
+.dlg-a{display:flex;gap:8px;justify-content:flex-end;}
+/* Status toggle */
+.st-lbl{display:inline-flex;align-items:center;gap:7px;padding:0 14px;height:36px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sb">
+  <div class="sb-brand">
+    <div class="sb-logo">✍️ AI Blog</div>
+    <div class="sb-sub">ふじもと歯科 SEOブログ管理</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-new" onclick="Nav.go('editor')">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      記事を新規作成
+    </div>
+    <div class="nav-item active" id="ni-dashboard" onclick="Nav.go('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      ダッシュボード
+    </div>
+    <div class="nav-item" id="ni-articles" onclick="Nav.go('articles')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      記事一覧
+    </div>
+    <div class="nav-sep"></div>
+    <div class="nav-item" id="ni-settings" onclick="Nav.go('settings')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      クリニック設定
+    </div>
+  </nav>
+</aside>
+<main class="main"><div id="root"></div></main>
+</div>
+<script>
+const SP = ['一般歯科','歯周病治療','予防・メンテナンス','小児歯科','小児矯正','セラミック・審美治療','ホワイトニング','入れ歯','マウスピース矯正','栄養相談'];
+
+// ── State ────────────────────────────────────────────────────────────────────
+const S = {
+  page: 'dashboard',
+  articles: [],
+  settings: { clinicName: '', clinicType: 'dental', websites: [], areas: [] },
+  art: { id: null, specialty: '', keywords: [], outline: '', content: '', metaTitle: '', metaDescription: '', tags: [], title: '', status: 'draft' },
+  gen: { 1: false, 2: false, 3: false },
+  fStatus: 'all', fSpec: 'all',
+};
+
+// ── API with retry ────────────────────────────────────────────────────────────
+async function apiFetch(method, path, body, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(path, opts);
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || `HTTP ${res.status}`); }
+      return res.json();
+    } catch (e) {
+      if (i === retries - 1) throw new Error('通信エラーのため処理を中断しました: ' + e.message);
+      await new Promise(r => setTimeout(r, 10000));
+    }
+  }
+}
+
+// ── Nav ──────────────────────────────────────────────────────────────────────
+const Nav = {
+  go(page, params = {}) {
+    S.page = page;
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const ni = document.getElementById('ni-' + page);
+    if (ni) ni.classList.add('active');
+    if (page === 'editor') {
+      if (params.article) {
+        const a = params.article;
+        S.art = { id: a.id, specialty: a.specialty || '', keywords: [...(a.keywords || [])], outline: a.outline || '', content: a.content || '', metaTitle: a.metaTitle || '', metaDescription: a.metaDescription || '', tags: [...(a.tags || [])], title: a.title || '', status: a.status || 'draft' };
+      } else {
+        S.art = { id: null, specialty: '', keywords: [], outline: '', content: '', metaTitle: '', metaDescription: '', tags: [], title: '', status: 'draft' };
+        S.gen = { 1: false, 2: false, 3: false };
+      }
+    }
+    render();
+  }
+};
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('root').innerHTML = { dashboard: renderDash, articles: renderArticles, editor: renderEditor, settings: renderSettings }[S.page]?.() || '';
+}
+
+function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function fmtDate(iso) { if (!iso) return '—'; const d = new Date(iso); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+function phaseName(p) { return ['未開始','Phase 1: 構成案','Phase 2: 本文','Phase 3: SEO完了'][p] || '—'; }
+function statusBadge(s) { return s === 'published' ? `<span class="badge bg-green">公開済</span>` : `<span class="badge bg-orange">下書き</span>`; }
+
+function renderDash() {
+  const arts = S.articles;
+  const pub = arts.filter(a => a.status === 'published').length;
+  return `<div class="page">
+    <div class="ph"><div><div class="pt">ダッシュボード</div><div class="ps">記事の管理とAI生成を行います</div></div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-v">${arts.length}</div><div class="stat-l">総記事数</div></div>
+      <div class="stat"><div class="stat-v" style="color:var(--green)">${pub}</div><div class="stat-l">公開済</div></div>
+      <div class="stat"><div class="stat-v" style="color:var(--orange)">${arts.length - pub}</div><div class="stat-l">下書き</div></div>
+      <div class="stat"><div class="stat-v" style="color:var(--blue)">${arts.filter(a => a.phase >= 3).length}</div><div class="stat-l">SEO完了</div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>直近の記事</div>
+      ${arts.length === 0 ? `<div class="empty"><div class="empty-t">記事がありません</div><div class="empty-s">「記事を新規作成」から始めましょう</div></div>` : `
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>タイトル</th><th>診療科目</th><th>フェーズ</th><th>ステータス</th><th>更新日</th><th></th></tr></thead>
+        <tbody>${arts.slice(0,5).map(a => `<tr>
+          <td class="td-title"><div class="atitle">${esc(a.title || '（未生成）')}</div><div class="akw">${(a.keywords||[]).join('、')}</div></td>
+          <td><span class="badge bg-gray">${esc(a.specialty)}</span></td>
+          <td><span class="badge bg-blue">${phaseName(a.phase)}</span></td>
+          <td>${statusBadge(a.status)}</td>
+          <td style="color:var(--ter);font-size:12px">${fmtDate(a.updatedAt)}</td>
+          <td><button class="btn btn-sm btn-g" onclick="editArticle('${a.id}')">編集</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>
+  </div>`;
+}
+
+function renderArticles() {
+  let arts = S.articles;
+  if (S.fStatus !== 'all') arts = arts.filter(a => a.status === S.fStatus);
+  if (S.fSpec !== 'all') arts = arts.filter(a => a.specialty === S.fSpec);
+  return `<div class="page">
+    <div class="ph">
+      <div><div class="pt">記事一覧</div><div class="ps">${S.articles.length} 件</div></div>
+      <button class="btn btn-p" onclick="Nav.go('editor')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新規作成</button>
+    </div>
+    <div class="fbar">
+      <select onchange="S.fStatus=this.value;render()">
+        <option value="all" ${S.fStatus==='all'?'selected':''}>すべてのステータス</option>
+        <option value="draft" ${S.fStatus==='draft'?'selected':''}>下書き</option>
+        <option value="published" ${S.fStatus==='published'?'selected':''}>公開済</option>
+      </select>
+      <select onchange="S.fSpec=this.value;render()">
+        <option value="all" ${S.fSpec==='all'?'selected':''}>すべての診療科目</option>
+        ${SP.map(s => `<option value="${s}" ${S.fSpec===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      ${arts.length === 0 ? `<div class="empty"><div class="empty-t">記事がありません</div></div>` : `
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>NO.</th><th>タイトル</th><th>診療科目</th><th>フェーズ</th><th>ステータス</th><th>更新日</th><th>操作</th></tr></thead>
+        <tbody>${arts.map((a,i) => `<tr>
+          <td style="color:var(--ter);font-size:12px;width:38px">${i+1}</td>
+          <td class="td-title"><div class="atitle">${esc(a.title||'（未生成）')}</div><div class="akw">${(a.keywords||[]).join('、')}</div></td>
+          <td><span class="badge bg-gray">${esc(a.specialty)}</span></td>
+          <td><span class="badge bg-blue">${phaseName(a.phase)}</span></td>
+          <td>${statusBadge(a.status)}</td>
+          <td style="color:var(--ter);font-size:12px;white-space:nowrap">${fmtDate(a.updatedAt)}</td>
+          <td><div class="btn-row"><button class="btn btn-sm btn-g" onclick="editArticle('${a.id}')">編集</button><button class="btn btn-sm btn-d" onclick="confirmDel('${a.id}')">削除</button></div></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>
+  </div>`;
+}
+
+function renderEditor() {
+  const d = S.art;
+  const p1 = !!d.outline.trim(), p2 = !!d.content.trim(), p3 = !!d.metaTitle.trim();
+  const g = S.gen;
+  const canSave = d.specialty && d.keywords.length > 0 && (d.outline || d.content);
+  const isEdit = !!d.id;
+  const stBg = d.status === 'published' ? 'var(--green-l)' : 'rgba(0,0,0,.06)';
+  const stColor = d.status === 'published' ? '#1a7a37' : 'var(--sub)';
+  return `<div class="page">
+    <div class="ph">
+      <div>
+        <div style="font-size:12px;color:var(--sub);margin-bottom:4px;cursor:pointer" onclick="Nav.go('articles')">← 記事一覧</div>
+        <div class="pt">${isEdit ? '記事を編集' : '記事を新規作成'}</div>
+      </div>
+      <div class="btn-row">
+        ${isEdit ? `<label class="st-lbl" style="background:${stBg};color:${stColor}">
+          <input type="checkbox" id="st-chk" style="display:none" ${d.status==='published'?'checked':''} onchange="S.art.status=this.checked?'published':'draft';render()">
+          ${d.status==='published'?'公開済':'下書き'}
+        </label>` : ''}
+        <button class="btn btn-p" onclick="saveArticle()" ${!canSave?'disabled':''}>
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          ${isEdit ? '更新する' : '保存する'}
+        </button>
+      </div>
+    </div>
+    <!-- 基本情報 -->
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>基本情報</div>
+      <div class="frow">
+        <div class="fg">
+          <label class="fl req">診療科目</label>
+          <select id="ed-sp" onchange="S.art.specialty=this.value">
+            <option value="">選択してください</option>
+            ${SP.map(s => `<option value="${s}" ${d.specialty===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl req">キーワード <span style="font-weight:400;color:var(--ter)">（Enterで追加）</span></label>
+          <div class="kw-wrap" id="kw-wrap" onclick="document.getElementById('kw-in').focus()">
+            ${d.keywords.map((k,i) => `<span class="kw-chip">${esc(k)}<span class="kw-rm" onclick="rmKw(${i})">×</span></span>`).join('')}
+            <input class="kw-in" id="kw-in" placeholder="${d.keywords.length?'':'キーワードを入力'}" onkeydown="addKw(event)" onfocus="this.parentElement.classList.add('focus')" onblur="this.parentElement.classList.remove('focus')">
+          </div>
+          <div class="fhint">例: 医療費控除、矯正、子供 → Enterで確定</div>
+        </div>
+      </div>
+    </div>
+    <!-- Phase 1 -->
+    <div class="pc">
+      <div class="pc-head">
+        <div class="pc-hl">
+          <div class="pnum ${p1?'done':''}">${p1?'✓':'1'}</div>
+          <div><div class="ptitle">Phase 1 — 構成案を生成</div><div class="pdesc">タイトル・見出し構成をAIが作成します</div></div>
+        </div>
+        <button class="btn btn-gen" onclick="generate(1)" ${g[1]||!d.specialty||!d.keywords.length?'disabled':''}>
+          ${g[1]?`<div class="spin"></div>生成中...`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${p1?'再生成':'構成案を生成'}`}
+        </button>
+      </div>
+      <div class="pc-body">
+        <textarea id="ed-outline" rows="12" placeholder="「構成案を生成」を押すとAIが自動生成します。生成後は自由に編集できます。" oninput="S.art.outline=this.value">${esc(d.outline)}</textarea>
+      </div>
+    </div>
+    <!-- Phase 2 -->
+    <div class="pc">
+      <div class="pc-head">
+        <div class="pc-hl">
+          <div class="pnum ${p2?'done':p1?'':'lock'}">${p2?'✓':'2'}</div>
+          <div><div class="ptitle">Phase 2 — 記事本文を生成</div><div class="pdesc">構成案をもとに本文（2500〜3500字）を執筆します</div></div>
+        </div>
+        <button class="btn btn-gen" onclick="generate(2)" ${g[2]||!p1?'disabled':''}>
+          ${g[2]?`<div class="spin"></div>生成中...`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${p2?'再生成':'本文を生成'}`}
+        </button>
+      </div>
+      ${p1 ? `<div class="pc-body">
+        <textarea id="ed-content" rows="22" placeholder="Phase 1完了後に本文を生成できます" oninput="S.art.content=this.value">${esc(d.content)}</textarea>
+        ${d.content?`<div style="font-size:12px;color:var(--ter);margin-top:6px;text-align:right">${d.content.length.toLocaleString()} 文字</div>`:''}
+      </div>` : `<div class="pc-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Phase 1の構成案を生成してからご利用ください</div>`}
+    </div>
+    <!-- Phase 3 -->
+    <div class="pc">
+      <div class="pc-head">
+        <div class="pc-hl">
+          <div class="pnum ${p3?'done':p2?'':'lock'}">${p3?'✓':'3'}</div>
+          <div><div class="ptitle">Phase 3 — SEO最適化</div><div class="pdesc">メタタイトル・ディスクリプション・タグを生成します</div></div>
+        </div>
+        <button class="btn btn-gen" onclick="generate(3)" ${g[3]||!p2?'disabled':''}>
+          ${g[3]?`<div class="spin"></div>生成中...`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${p3?'再生成':'SEO最適化'}`}
+        </button>
+      </div>
+      ${p2 ? `<div class="pc-body">
+        <div class="meta-grid">
+          <div class="fg">
+            <label class="fl">メタタイトル</label>
+            <input type="text" id="ed-mt" value="${esc(d.metaTitle)}" placeholder="35〜40文字" oninput="S.art.metaTitle=this.value;updateCC('ed-mt','cc-mt',35,40)">
+            <div class="cc ${ccClass(d.metaTitle.length,35,40)}" id="cc-mt">${d.metaTitle.length} 文字</div>
+          </div>
+          <div class="fg">
+            <label class="fl">メタディスクリプション</label>
+            <input type="text" id="ed-md" value="${esc(d.metaDescription)}" placeholder="110〜120文字" oninput="S.art.metaDescription=this.value;updateCC('ed-md','cc-md',110,120)">
+            <div class="cc ${ccClass(d.metaDescription.length,110,120)}" id="cc-md">${d.metaDescription.length} 文字</div>
+          </div>
+        </div>
+        ${d.tags.length?`<div class="fg"><label class="fl">タグ</label><div class="tags-wrap">${d.tags.map(t=>`<span class="tag-pill">${esc(t)}</span>`).join('')}</div></div>`:''}
+      </div>` : `<div class="pc-lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Phase 2の本文を生成してからご利用ください</div>`}
+    </div>
+  </div>`;
+}
+
+function renderSettings() {
+  const s = S.settings;
+  return `<div class="page">
+    <div class="ph"><div><div class="pt">クリニック設定</div><div class="ps">AI記事生成のベースとなる情報を設定します</div></div></div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>基本情報</div>
+      <div class="fg">
+        <label class="fl">クリニック種別</label>
+        <div class="tgl-group">
+          <button class="tgl-btn ${s.clinicType==='dental'?'active':''}" onclick="S.settings.clinicType='dental';render()">歯科クリニック</button>
+          <button class="tgl-btn ${s.clinicType==='medical'?'active':''}" onclick="S.settings.clinicType='medical';render()">医科クリニック</button>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl req">クリニック名</label>
+        <input type="text" id="s-name" value="${esc(s.clinicName)}" placeholder="例: 医療法人ふじもと歯科" oninput="S.settings.clinicName=this.value">
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>WebサイトURL</div>
+      <p style="font-size:12px;color:var(--sub);margin-bottom:12px">記事生成時に「当院では〜」として参照するURLです。</p>
+      <div class="url-list">
+        ${(s.websites||[]).map((w,i)=>`<div class="url-item">
+          <input class="url-name" type="text" value="${esc(w.name)}" placeholder="サイト名" oninput="S.settings.websites[${i}].name=this.value">
+          <input type="text" value="${esc(w.url)}" placeholder="https://example.com" oninput="S.settings.websites[${i}].url=this.value">
+          <button class="btn btn-sm btn-d" onclick="S.settings.websites.splice(${i},1);render()">削除</button>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-s btn-sm" onclick="S.settings.websites.push({name:'',url:''});render()">+ URLを追加</button>
+    </div>
+    <div class="card">
+      <div class="ctitle"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>対象エリア（SEO地域名）</div>
+      <p style="font-size:12px;color:var(--sub);margin-bottom:12px">市区町村名や駅名（最大5件）</p>
+      <div class="area-list">
+        ${(s.areas||[]).map((a,i)=>`<span class="area-chip">${esc(a)}<span class="area-rm" onclick="S.settings.areas.splice(${i},1);render()">×</span></span>`).join('')}
+      </div>
+      ${(s.areas||[]).length<5?`<div class="add-row"><input type="text" id="area-in" placeholder="例: 堺市" style="max-width:180px"><button class="btn btn-s btn-sm" onclick="addArea()">追加</button></div>`:''}
+    </div>
+    <button class="btn btn-p" style="width:100%;height:44px;font-size:15px" onclick="saveSettings()">
+      <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      設定を保存
+    </button>
+  </div>`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function ccClass(len, min, max) { return len >= min && len <= max ? 'ok' : len > 0 ? 'warn' : ''; }
+function updateCC(iid, cid, min, max) {
+  const v = document.getElementById(iid)?.value || '';
+  const el = document.getElementById(cid);
+  if (el) { el.textContent = v.length + ' 文字'; el.className = 'cc ' + ccClass(v.length, min, max); }
+}
+function addKw(e) {
+  if (e.key !== 'Enter' && e.key !== ',') return;
+  e.preventDefault();
+  const v = e.target.value.trim().replace(/,/g, '');
+  if (v && !S.art.keywords.includes(v)) { S.art.keywords.push(v); render(); setTimeout(() => document.getElementById('kw-in')?.focus(), 0); }
+  else e.target.value = '';
+}
+function rmKw(i) { S.art.keywords.splice(i, 1); render(); }
+function addArea() {
+  const v = document.getElementById('area-in')?.value.trim();
+  if (v && !S.settings.areas.includes(v)) { S.settings.areas.push(v); render(); }
+}
+function toast(msg, type = '') {
+  const el = document.createElement('div'); el.className = 'toast ' + type; el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3000);
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+async function generate(phase) {
+  S.gen[phase] = true; render();
+  try {
+    const res = await apiFetch('POST', '/api/blog/generate', { phase, article: S.art, settings: S.settings });
+    if (phase === 1) {
+      S.art.outline = res.result;
+      const m = res.result.match(/^#\s+(.+)/m);
+      if (m) S.art.title = m[1].trim();
+    } else if (phase === 2) {
+      S.art.content = res.result;
+    } else {
+      try {
+        const j = JSON.parse(res.result.replace(/```json|```/g, '').trim());
+        S.art.metaTitle = j.metaTitle || ''; S.art.metaDescription = j.metaDescription || ''; S.art.tags = j.tags || [];
+      } catch { S.art.metaTitle = res.result; }
+    }
+    if (S.art.id) await patchArticle({ ...S.art, phase: Math.max(getPhaseNum(), phase) });
+    toast('生成完了しました', 'ok');
+  } catch (e) { toast(e.message, 'err'); }
+  S.gen[phase] = false; render();
+}
+
+function getPhaseNum() { return S.art.metaTitle ? 3 : S.art.content ? 2 : S.art.outline ? 1 : 0; }
+
+async function saveArticle() {
+  try {
+    if (S.art.id) {
+      await patchArticle({ ...S.art, phase: getPhaseNum() });
+      toast('更新しました', 'ok');
+    } else {
+      const created = await apiFetch('POST', '/api/blog/articles', { title: S.art.title, specialty: S.art.specialty, keywords: S.art.keywords });
+      S.art.id = created.id;
+      await patchArticle({ ...S.art, phase: getPhaseNum() });
+      await loadArticles();
+      toast('保存しました', 'ok');
+    }
+    render();
+  } catch (e) { toast(e.message, 'err'); }
+}
+
+async function patchArticle(data) {
+  const updated = await apiFetch('PUT', `/api/blog/articles/${S.art.id}`, data);
+  S.articles = S.articles.map(a => a.id === updated.id ? updated : a);
+  return updated;
+}
+
+function editArticle(id) {
+  const a = S.articles.find(x => x.id === id);
+  if (a) Nav.go('editor', { article: a });
+}
+
+function confirmDel(id) {
+  const a = S.articles.find(x => x.id === id);
+  const ov = document.createElement('div'); ov.className = 'overlay';
+  ov.innerHTML = `<div class="dlg"><div class="dlg-t">記事を削除しますか？</div><div class="dlg-b">「${esc(a?.title || '（未生成）')}」を削除します。この操作は取り消せません。</div><div class="dlg-a"><button class="btn btn-s" onclick="this.closest('.overlay').remove()">キャンセル</button><button class="btn btn-d" onclick="doDelete('${id}',this.closest('.overlay'))">削除する</button></div></div>`;
+  document.body.appendChild(ov);
+}
+
+async function doDelete(id, ov) {
+  try { await apiFetch('DELETE', `/api/blog/articles/${id}`); S.articles = S.articles.filter(a => a.id !== id); ov.remove(); render(); toast('削除しました'); } catch (e) { toast(e.message, 'err'); }
+}
+
+async function saveSettings() {
+  try { await apiFetch('PUT', '/api/blog/settings', S.settings); toast('設定を保存しました', 'ok'); } catch (e) { toast(e.message, 'err'); }
+}
+
+async function loadArticles() { try { S.articles = await apiFetch('GET', '/api/blog/articles'); } catch { S.articles = []; } }
+async function loadSettings() { try { S.settings = await apiFetch('GET', '/api/blog/settings'); } catch {} }
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+(async () => { await Promise.all([loadArticles(), loadSettings()]); Nav.go('dashboard'); })();
+</script>
+</body>
+</html>
