@@ -9,16 +9,13 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write  # OIDC認証に必要
       contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: denoland/deployctl@v1
+      - uses: denoland/deployctl@v2
         with:
           project: fujimoto-dental-tools
           entrypoint: main.ts
-          root: .
-        env:
-          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
