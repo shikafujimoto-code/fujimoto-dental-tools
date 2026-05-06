@@ -5,7 +5,13 @@ const app = new Hono();
 
 app.use("*", cors());
 
-const kv = await Deno.openKv().catch(() => null);
+let kv: Deno.Kv | null = null;
+try {
+  kv = await Deno.openKv();
+  console.log("[KV] Deno KV initialized successfully");
+} catch (err) {
+  console.error("[KV] Failed to initialize Deno KV:", err);
+}
 
 app.get("/", async (c) => {
   try {
@@ -231,17 +237,21 @@ app.post("/api/chat", async (c) => {
     const reply = data.content[0].text;
 
     if (kv) {
-      const sessionId = crypto.randomUUID();
-      const now = new Date();
-      const jstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000)
-        .toISOString()
-        .replace("Z", "+09:00");
-      await kv.set(["chat_logs", now.getTime(), sessionId], {
-        question: message.trim(),
-        reply,
-        timestamp: jstTimestamp,
-        sessionId,
-      } satisfies ChatLog);
+      try {
+        const sessionId = crypto.randomUUID();
+        const now = new Date();
+        const jstTimestamp = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+          .toISOString()
+          .replace("Z", "+09:00");
+        await kv.set(["chat_logs", now.getTime(), sessionId], {
+          question: message.trim(),
+          reply,
+          timestamp: jstTimestamp,
+          sessionId,
+        } satisfies ChatLog);
+      } catch (err) {
+        console.error("[KV] Failed to save chat log:", err);
+      }
     }
 
     return c.json({ reply });
@@ -271,15 +281,20 @@ function unauthorizedResponse(): Response {
   });
 }
 
-async function fetchAllLogs(): Promise<ChatLog[]> {
-  if (!kv) return [];
-  const logs: ChatLog[] = [];
-  const iter = kv.list<ChatLog>({ prefix: ["chat_logs"] });
-  for await (const entry of iter) {
-    logs.push(entry.value);
+async function fetchAllLogs(): Promise<ChatLog[] | null> {
+  if (!kv) return null;
+  try {
+    const logs: ChatLog[] = [];
+    const iter = kv.list<ChatLog>({ prefix: ["chat_logs"] });
+    for await (const entry of iter) {
+      logs.push(entry.value);
+    }
+    logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    return logs;
+  } catch (err) {
+    console.error("[KV] Failed to fetch logs:", err);
+    return null;
   }
-  logs.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-  return logs;
 }
 
 function escHtml(s: string): string {
@@ -376,12 +391,25 @@ function logsPageHtml(logs: ChatLog[]): string {
 app.get("/admin/logs", async (c) => {
   if (!checkBasicAuth(c.req.raw)) return unauthorizedResponse();
   const logs = await fetchAllLogs();
+  if (logs === null) {
+    return c.html(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>エラー - ふじもと歯科</title>
+<style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f0f4f8;}
+.box{background:white;padding:2rem;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.1);max-width:480px;text-align:center;}
+h1{color:#c53030;margin-bottom:1rem;}p{color:#4a5568;line-height:1.7;}</style></head>
+<body><div class="box"><h1>⚠️ KV接続エラー</h1>
+<p>KVデータベースに接続できません。<br>Deno Deployの設定を確認してください。</p>
+<p style="margin-top:1rem;font-size:.8rem;color:#718096">
+Deno Deploy ダッシュボード → プロジェクト設定 → KV を確認してください。</p>
+</div></body></html>`, 500);
+  }
   return c.html(logsPageHtml(logs));
 });
 
 app.get("/admin/logs/csv", async (c) => {
   if (!checkBasicAuth(c.req.raw)) return unauthorizedResponse();
   const logs = await fetchAllLogs();
+  if (logs === null) return c.text("KVデータベースに接続できません", 500);
   const csv = buildCsv(logs);
   const today = new Date(Date.now() + 9 * 60 * 60 * 1000)
     .toISOString()
