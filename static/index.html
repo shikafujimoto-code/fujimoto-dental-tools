@@ -306,6 +306,24 @@
       font-size: 0.93rem;
       max-height: 640px;
       overflow-y: auto;
+      cursor: text;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .result-content:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29,158,117,0.12);
+      background: #fff;
+    }
+
+    .edit-hint {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .result-content::-webkit-scrollbar { width: 5px; }
@@ -422,7 +440,7 @@
     <div class="logo-circle">🦷</div>
     <h1>ふじもと歯科</h1>
     <p class="header-sub">患者説明資料ジェネレーター &nbsp;|&nbsp; 堺市堺区</p>
-    <p class="header-catch">あなたの笑顔のために、堺市で30年</p>
+    <p class="header-catch">一生、自分の歯で食べる喜びを</p>
   </div>
 </header>
 
@@ -516,7 +534,8 @@
         </button>
       </div>
     </div>
-    <div class="result-content" id="resultContent"></div>
+    <div class="result-content" id="resultContent" contenteditable="true" spellcheck="false"></div>
+    <p class="edit-hint">✏️ クリックしてその場で文章を編集できます</p>
   </div>
 </main>
 
@@ -603,7 +622,7 @@ HP：https://shika-fujimoto.com/
   }
 
   async function copyResult() {
-    const text = document.getElementById('resultContent').textContent;
+    const text = document.getElementById('resultContent').innerText;
     const icon = document.getElementById('copyIcon');
     const txt  = document.getElementById('copyText');
     const btn  = document.getElementById('copyBtn');
