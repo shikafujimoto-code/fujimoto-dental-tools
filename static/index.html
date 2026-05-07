@@ -4,203 +4,465 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ふじもと歯科 | 患者説明資料ジェネレーター</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #1A73A7;
-      --primary-light: #E8F4FD;
-      --primary-dark: #125A8A;
-      --bg: #F0F7FF;
+      --primary: #1D9E75;
+      --primary-light: #E6F6F1;
+      --primary-dark: #157A5A;
+      --bg: #F4F7F6;
       --card: #FFFFFF;
       --text: #2D3748;
       --text-light: #718096;
-      --border: #CBD5E0;
-      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --border: #E2E8F0;
+      --shadow: 0 4px 16px rgba(0,0,0,0.08);
+      --shadow-hover: 0 8px 28px rgba(29,158,117,0.22);
+      --radius: 16px;
+      --radius-sm: 10px;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+      font-family: 'Noto Sans JP', 'Hiragino Sans', 'Meiryo', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      line-height: 1.7;
     }
+
+    /* ===== Header ===== */
     header {
-      background: var(--primary);
+      background: linear-gradient(135deg, #1D9E75 0%, #157A5A 100%);
       color: white;
-      padding: 24px 16px;
+      padding: 44px 16px 38px;
       text-align: center;
-      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
     }
-    .tooth-icon { font-size: 2.4rem; margin-bottom: 8px; }
-    header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.05em; }
-    header p { font-size: 0.9rem; opacity: 0.85; margin-top: 6px; }
-    main { max-width: 780px; margin: 32px auto; padding: 0 16px 40px; }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 220px; height: 220px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 50%;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -70px; left: -30px;
+      width: 180px; height: 180px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+
+    .header-inner { position: relative; z-index: 1; }
+
+    .logo-circle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 68px; height: 68px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%;
+      margin-bottom: 16px;
+      font-size: 2rem;
+      backdrop-filter: blur(4px);
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+    }
+
+    .header-sub {
+      font-size: 0.88rem;
+      opacity: 0.85;
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+    }
+
+    .header-catch {
+      display: inline-block;
+      font-size: 0.82rem;
+      opacity: 0.8;
+      border-top: 1px solid rgba(255,255,255,0.3);
+      padding-top: 12px;
+      letter-spacing: 0.06em;
+    }
+
+    /* ===== Main ===== */
+    main { max-width: 800px; margin: 0 auto; padding: 40px 16px 64px; }
+
+    /* ===== Card ===== */
     .card {
       background: var(--card);
-      border-radius: 12px;
+      border-radius: var(--radius);
       padding: 32px;
       box-shadow: var(--shadow);
       margin-bottom: 24px;
+      border: 1px solid rgba(0,0,0,0.04);
     }
-    .card h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
       color: var(--primary);
-      margin-bottom: 24px;
-      padding-bottom: 12px;
+      margin-bottom: 26px;
+      padding-bottom: 14px;
       border-bottom: 2px solid var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .form-group { margin-bottom: 22px; }
-    label {
+
+    /* ===== Form ===== */
+    .form-group { margin-bottom: 20px; }
+
+    .form-label {
       display: block;
       font-weight: 600;
+      font-size: 0.92rem;
       margin-bottom: 8px;
-      font-size: 0.95rem;
     }
+
     .badge {
       display: inline-block;
       background: var(--primary);
       color: white;
-      font-size: 0.68rem;
-      padding: 2px 7px;
-      border-radius: 10px;
+      font-size: 0.63rem;
+      padding: 2px 8px;
+      border-radius: 20px;
       margin-left: 8px;
+      font-weight: 500;
       vertical-align: middle;
-      font-weight: normal;
     }
+
     select {
       width: 100%;
-      padding: 12px 44px 12px 16px;
+      padding: 13px 44px 13px 16px;
       border: 2px solid var(--border);
-      border-radius: 8px;
-      font-size: 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.96rem;
+      font-family: inherit;
       color: var(--text);
-      background: white;
+      background-color: white;
       cursor: pointer;
       transition: border-color 0.2s, box-shadow 0.2s;
       appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231A73A7' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231D9E75' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 14px center;
     }
+
     select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(26,115,167,0.15);
+      box-shadow: 0 0 0 3px rgba(29,158,117,0.15);
     }
+
+    optgroup { font-weight: 700; color: var(--text-light); font-size: 0.85rem; }
+    option { font-weight: 400; color: var(--text); }
+
+    /* ===== Generate Button ===== */
     .btn-generate {
       width: 100%;
-      padding: 15px;
-      background: var(--primary);
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-size: 1.05rem;
-      font-weight: 600;
+      font-weight: 700;
+      font-family: inherit;
       cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.04em;
-      margin-top: 4px;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      letter-spacing: 0.06em;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
+
     .btn-generate:hover:not(:disabled) {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 14px rgba(26,115,167,0.3);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
     }
-    .btn-generate:disabled { background: #A0AEC0; cursor: not-allowed; }
-    .loading { display: none; text-align: center; padding: 32px; }
+
+    .btn-generate:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-generate:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ===== Loading ===== */
+    .loading { display: none; text-align: center; padding: 44px 20px; }
     .loading.active { display: block; }
-    .spinner {
-      width: 48px; height: 48px;
-      border: 4px solid var(--primary-light);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-      margin: 0 auto 16px;
+
+    .loading-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .loading p { color: var(--text-light); line-height: 1.7; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .dot {
+      width: 13px; height: 13px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: dotBounce 1.3s infinite ease-in-out;
+    }
+    .dot:nth-child(2) { animation-delay: 0.22s; }
+    .dot:nth-child(3) { animation-delay: 0.44s; }
+
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.55); opacity: 0.45; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .loading p { color: var(--text-light); font-size: 0.93rem; line-height: 1.9; }
+
+    /* ===== Result Card ===== */
     .result-card { display: none; }
-    .result-card.active { display: block; }
+    .result-card.active { display: block; animation: fadeInUp 0.4s ease-out; }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .result-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
       border-bottom: 2px solid var(--primary-light);
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    .result-header h2 { border: none; padding: 0; margin: 0; color: var(--primary); font-size: 1.1rem; }
+
+    .result-header .card-title { margin: 0; padding: 0; border: none; }
+
+    .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn-copy, .btn-pdf {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.22s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 2px solid transparent;
+    }
+
     .btn-copy {
-      padding: 8px 18px;
       background: var(--primary-light);
       color: var(--primary);
-      border: 1.5px solid var(--primary);
-      border-radius: 6px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
+      border-color: var(--primary);
     }
-    .btn-copy:hover { background: var(--primary); color: white; }
+    .btn-copy:hover, .btn-copy.copied {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-copy.copied { animation: popIn 0.3s ease-out; }
+
+    @keyframes popIn {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.07); }
+      100% { transform: scale(1); }
+    }
+
+    .btn-pdf {
+      background: #FFFBF0;
+      color: #92650A;
+      border-color: #F6C144;
+    }
+    .btn-pdf:hover { background: #F6C144; color: #3D2800; border-color: #F6C144; }
+
+    /* ===== Result Content ===== */
     .result-content {
       background: #FAFBFC;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      line-height: 1.85;
+      border-radius: var(--radius-sm);
+      padding: 28px;
+      line-height: 1.95;
       white-space: pre-wrap;
       font-size: 0.93rem;
-      max-height: 600px;
+      max-height: 640px;
       overflow-y: auto;
     }
+
+    .result-content::-webkit-scrollbar { width: 5px; }
+    .result-content::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .result-content::-webkit-scrollbar-thumb { background: #CBD5E0; border-radius: 4px; }
+
+    /* ===== Error ===== */
     .error-msg {
       background: #FFF5F5;
       border: 1px solid #FC8181;
       color: #C53030;
       padding: 14px 18px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       display: none;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
+      font-size: 0.92rem;
     }
     .error-msg.active { display: block; }
+
+    /* ===== Footer ===== */
     footer {
       text-align: center;
-      padding: 24px;
+      padding: 32px 16px;
       color: var(--text-light);
-      font-size: 0.82rem;
+      font-size: 0.8rem;
+      line-height: 2.1;
+      border-top: 1px solid var(--border);
+      background: white;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer strong { color: var(--text); }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.55rem; }
+      .card { padding: 22px 18px; }
+      .result-actions { width: 100%; }
+      .btn-copy, .btn-pdf { flex: 1; justify-content: center; }
+    }
+
+    /* ===== Print / PDF CSS ===== */
+    @media print {
+      @page { size: A4; margin: 18mm 14mm; }
+
+      header, footer,
+      .setting-card, .error-msg, .loading,
+      .result-actions, .result-header .card-title { display: none !important; }
+
+      body { background: white; font-size: 10.5pt; line-height: 1.85; }
+
+      main { max-width: 100%; margin: 0; padding: 0; }
+
+      .result-card {
+        display: block !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        animation: none !important;
+      }
+
+      .result-header {
+        border-bottom: 2px solid #1D9E75;
+        padding-bottom: 10px;
+        margin-bottom: 18px;
+      }
+
+      .result-content {
+        border: none;
+        background: white;
+        padding: 0;
+        max-height: none;
+        overflow: visible;
+        font-size: 10.5pt;
+        line-height: 1.85;
+      }
+
+      .print-logo { display: block !important; }
+    }
+
+    .print-logo {
+      display: none;
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 3px solid #1D9E75;
+    }
+
+    .print-logo .plogo-name {
+      font-size: 18pt;
+      font-weight: 700;
+      color: #1D9E75;
+      letter-spacing: 0.12em;
+    }
+
+    .print-logo .plogo-sub {
+      font-size: 9pt;
+      color: #555;
+      margin-top: 3px;
     }
   </style>
 </head>
 <body>
 
+<!-- 印刷時のみ表示されるロゴ -->
+<div class="print-logo">
+  <div class="plogo-name">ふじもと歯科</div>
+  <div class="plogo-sub">患者説明資料</div>
+</div>
+
 <header>
-  <div class="tooth-icon">🦷</div>
-  <h1>ふじもと歯科</h1>
-  <p>患者説明資料ジェネレーター &nbsp;|&nbsp; 堺市</p>
+  <div class="header-inner">
+    <div class="logo-circle">🦷</div>
+    <h1>ふじもと歯科</h1>
+    <p class="header-sub">患者説明資料ジェネレーター &nbsp;|&nbsp; 堺市堺区</p>
+    <p class="header-catch">あなたの笑顔のために、堺市で30年</p>
+  </div>
 </header>
 
 <main>
-  <div class="card">
-    <h2>📋 説明資料の設定</h2>
+  <div class="card setting-card">
+    <h2 class="card-title">📋 説明資料の設定</h2>
 
     <div class="form-group">
-      <label for="treatment">治療メニュー <span class="badge">必須</span></label>
+      <label class="form-label" for="treatment">治療メニュー <span class="badge">必須</span></label>
       <select id="treatment">
         <option value="">-- 選択してください --</option>
-        <option value="虫歯治療（う蝕治療）">虫歯治療（う蝕治療）</option>
-        <option value="歯周病治療">歯周病治療</option>
-        <option value="マウスピース矯正（インビザライン）">マウスピース矯正（インビザライン）</option>
-        <option value="インプラント治療">インプラント治療</option>
-        <option value="ホワイトニング">ホワイトニング</option>
-        <option value="小児歯科">小児歯科</option>
-        <option value="定期健診・クリーニング">定期健診・クリーニング</option>
-        <option value="入れ歯（義歯）治療">入れ歯（義歯）治療</option>
-        <option value="親知らず抜歯">親知らず抜歯</option>
+        <optgroup label="一般治療">
+          <option value="虫歯治療（う蝕治療）">虫歯治療（う蝕治療）</option>
+          <option value="歯周病治療">歯周病治療</option>
+          <option value="根管治療（歯の根の治療）">根管治療（歯の根の治療）</option>
+          <option value="知覚過敏治療">知覚過敏治療</option>
+          <option value="口臭治療">口臭治療</option>
+          <option value="親知らず抜歯">親知らず抜歯</option>
+        </optgroup>
+        <optgroup label="審美・補綴">
+          <option value="セラミック治療">セラミック治療</option>
+          <option value="ホワイトニング">ホワイトニング</option>
+          <option value="入れ歯（義歯）治療">入れ歯（義歯）治療</option>
+          <option value="インプラント治療">インプラント治療</option>
+        </optgroup>
+        <optgroup label="矯正">
+          <option value="マウスピース矯正（インビザライン）">マウスピース矯正（インビザライン）</option>
+          <option value="小児矯正">小児矯正</option>
+        </optgroup>
+        <optgroup label="予防・小児・その他">
+          <option value="小児歯科">小児歯科</option>
+          <option value="予防クリーニング">予防クリーニング</option>
+          <option value="定期検診・メンテナンス">定期検診・メンテナンス</option>
+          <option value="栄養相談">栄養相談</option>
+        </optgroup>
       </select>
     </div>
 
     <div class="form-group">
-      <label for="patient">対象患者 <span class="badge">必須</span></label>
+      <label class="form-label" for="patient">対象患者 <span class="badge">必須</span></label>
       <select id="patient">
         <option value="">-- 選択してください --</option>
         <option value="初診の患者さま">初診の患者さま</option>
@@ -214,7 +476,7 @@
     </div>
 
     <div class="form-group">
-      <label for="style">文章スタイル <span class="badge">必須</span></label>
+      <label class="form-label" for="style">文章スタイル <span class="badge">必須</span></label>
       <select id="style">
         <option value="">-- 選択してください --</option>
         <option value="丁寧でわかりやすい（標準）">丁寧でわかりやすい（標準）</option>
@@ -225,47 +487,84 @@
     </div>
 
     <button class="btn-generate" id="generateBtn" onclick="generate()">
-      説明資料を生成する
+      <span id="btnIcon">✨</span>
+      <span id="btnText">説明資料を生成する</span>
     </button>
   </div>
 
   <div class="error-msg" id="errorMsg"></div>
 
   <div class="loading" id="loading">
-    <div class="spinner"></div>
+    <div class="loading-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
     <p>AIが説明資料を作成しています...<br>しばらくお待ちください</p>
   </div>
 
   <div class="card result-card" id="resultCard">
     <div class="result-header">
-      <h2>📄 生成された説明資料</h2>
-      <button class="btn-copy" onclick="copyResult()">コピー</button>
+      <h2 class="card-title">📄 生成された説明資料</h2>
+      <div class="result-actions">
+        <button class="btn-copy" id="copyBtn" onclick="copyResult()">
+          <span id="copyIcon">📋</span>
+          <span id="copyText">コピー</span>
+        </button>
+        <button class="btn-pdf" onclick="printAsPDF()">
+          <span>🖨️</span> PDFで保存
+        </button>
+      </div>
     </div>
     <div class="result-content" id="resultContent"></div>
   </div>
 </main>
 
 <footer>
-  <p>ふじもと歯科 &copy; 2024 &nbsp;|&nbsp; 堺市</p>
+  <strong>ふじもと歯科</strong><br>
+  〒590-0077 大阪府堺市堺区中瓦町2-3-14 パーターさかもと銀座ビル2階<br>
+  TEL: <a href="tel:050-1808-5701">050-1808-5701</a>
+  &nbsp;|&nbsp;
+  <a href="https://shika-fujimoto.com/" target="_blank" rel="noopener">公式HP</a>
+  &nbsp;|&nbsp;
+  Instagram: <a href="https://www.instagram.com/fujimotoshika/" target="_blank" rel="noopener">@fujimotoshika</a><br>
+  診療時間：月火木金 9:30〜19:00 / 土 9:30〜18:00 &nbsp;|&nbsp; 休診日：水曜・日曜・祝日<br>
+  院長：藤本直志
 </footer>
 
 <script>
+  const CLINIC_FOOTER = `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ふじもと歯科
+〒590-0077 大阪府堺市堺区中瓦町2-3-14
+パーターさかもと銀座ビル2階
+TEL：050-1808-5701
+HP：https://shika-fujimoto.com/
+診療時間：月火木金 9:30〜19:00 / 土 9:30〜18:00
+休診日：水曜・日曜・祝日
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
   async function generate() {
     const treatment = document.getElementById('treatment').value;
-    const patient = document.getElementById('patient').value;
-    const style = document.getElementById('style').value;
+    const patient   = document.getElementById('patient').value;
+    const style     = document.getElementById('style').value;
 
     if (!treatment || !patient || !style) {
       showError('すべての項目を選択してください。');
       return;
     }
 
-    const btn = document.getElementById('generateBtn');
-    const loading = document.getElementById('loading');
+    const btn      = document.getElementById('generateBtn');
+    const btnIcon  = document.getElementById('btnIcon');
+    const btnText  = document.getElementById('btnText');
+    const loading  = document.getElementById('loading');
     const errorMsg = document.getElementById('errorMsg');
     const resultCard = document.getElementById('resultCard');
 
     btn.disabled = true;
+    btnIcon.textContent = '⏳';
+    btnText.textContent = '生成中...';
     loading.classList.add('active');
     errorMsg.classList.remove('active');
     resultCard.classList.remove('active');
@@ -278,38 +577,54 @@
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
 
-      if (!res.ok) {
-        throw new Error(data.error || 'エラーが発生しました');
-      }
-
-      document.getElementById('resultContent').textContent = data.result;
+      document.getElementById('resultContent').textContent = data.result + CLINIC_FOOTER;
       resultCard.classList.add('active');
-      resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      setTimeout(() => {
+        resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+
     } catch (err) {
       showError(err.message);
     } finally {
       btn.disabled = false;
+      btnIcon.textContent = '✨';
+      btnText.textContent = '説明資料を生成する';
       loading.classList.remove('active');
     }
   }
 
   function showError(msg) {
-    const errorMsg = document.getElementById('errorMsg');
-    errorMsg.textContent = msg;
-    errorMsg.classList.add('active');
+    const el = document.getElementById('errorMsg');
+    el.textContent = '⚠️ ' + msg;
+    el.classList.add('active');
   }
 
   async function copyResult() {
     const text = document.getElementById('resultContent').textContent;
+    const icon = document.getElementById('copyIcon');
+    const txt  = document.getElementById('copyText');
+    const btn  = document.getElementById('copyBtn');
+
     try {
       await navigator.clipboard.writeText(text);
-      const btn = document.querySelector('.btn-copy');
-      btn.textContent = 'コピー完了！';
-      setTimeout(() => { btn.textContent = 'コピー'; }, 2000);
+      icon.textContent = '✅';
+      txt.textContent  = 'コピー完了！';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        icon.textContent = '📋';
+        txt.textContent  = 'コピー';
+        btn.classList.remove('copied');
+      }, 2500);
     } catch {
       alert('コピーに失敗しました。テキストを手動で選択してください。');
     }
+  }
+
+  function printAsPDF() {
+    window.print();
   }
 </script>
 
