@@ -98,7 +98,7 @@
     }
 
     /* ===== Main ===== */
-    main { max-width: 800px; margin: 0 auto; padding: 40px 16px 64px; }
+    main { max-width: 860px; margin: 0 auto; padding: 40px 16px 64px; }
 
     /* ===== Card ===== */
     .card {
@@ -256,7 +256,7 @@
 
     .result-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-    .btn-copy, .btn-pdf {
+    .btn-copy, .btn-pdf, .btn-preview {
       padding: 9px 18px;
       border-radius: 8px;
       font-size: 0.85rem;
@@ -295,40 +295,22 @@
     }
     .btn-pdf:hover { background: #F6C144; color: #3D2800; border-color: #F6C144; }
 
-    /* ===== Result Content ===== */
-    .result-content {
-      background: #FAFBFC;
+    .btn-preview {
+      background: #F0F0FF;
+      color: #5B50D6;
+      border-color: #7B74E8;
+    }
+    .btn-preview:hover { background: #7B74E8; color: white; border-color: #7B74E8; }
+
+    /* ===== Result Frame ===== */
+    .result-frame {
+      width: 100%;
+      height: 720px;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      padding: 28px;
-      line-height: 1.95;
-      white-space: pre-wrap;
-      font-size: 0.93rem;
-      max-height: 640px;
-      overflow-y: auto;
-      cursor: text;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      background: white;
+      display: block;
     }
-
-    .result-content:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(29,158,117,0.12);
-      background: #fff;
-    }
-
-    .edit-hint {
-      font-size: 0.75rem;
-      color: var(--text-light);
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .result-content::-webkit-scrollbar { width: 5px; }
-    .result-content::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-    .result-content::-webkit-scrollbar-thumb { background: #CBD5E0; border-radius: 4px; }
 
     /* ===== Error ===== */
     .error-msg {
@@ -362,78 +344,23 @@
       header h1 { font-size: 1.55rem; }
       .card { padding: 22px 18px; }
       .result-actions { width: 100%; }
-      .btn-copy, .btn-pdf { flex: 1; justify-content: center; }
+      .btn-copy, .btn-pdf, .btn-preview { flex: 1; justify-content: center; }
+      .result-frame { height: 500px; }
     }
 
-    /* ===== Print / PDF CSS ===== */
+    /* ===== Print CSS ===== */
     @media print {
-      @page { size: A4; margin: 18mm 14mm; }
-
-      header, footer,
-      .setting-card, .error-msg, .loading,
-      .result-actions, .result-header .card-title { display: none !important; }
-
-      body { background: white; font-size: 10.5pt; line-height: 1.85; }
-
+      @page { size: A4; margin: 0; }
+      header, footer, .setting-card, .error-msg, .loading,
+      .result-actions, .result-header { display: none !important; }
+      body { background: white; }
       main { max-width: 100%; margin: 0; padding: 0; }
-
-      .result-card {
-        display: block !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        animation: none !important;
-      }
-
-      .result-header {
-        border-bottom: 2px solid #1D9E75;
-        padding-bottom: 10px;
-        margin-bottom: 18px;
-      }
-
-      .result-content {
-        border: none;
-        background: white;
-        padding: 0;
-        max-height: none;
-        overflow: visible;
-        font-size: 10.5pt;
-        line-height: 1.85;
-      }
-
-      .print-logo { display: block !important; }
-    }
-
-    .print-logo {
-      display: none;
-      text-align: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 3px solid #1D9E75;
-    }
-
-    .print-logo .plogo-name {
-      font-size: 18pt;
-      font-weight: 700;
-      color: #1D9E75;
-      letter-spacing: 0.12em;
-    }
-
-    .print-logo .plogo-sub {
-      font-size: 9pt;
-      color: #555;
-      margin-top: 3px;
+      .result-card { display: block !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+      .result-frame { height: 100vh; border: none; }
     }
   </style>
 </head>
 <body>
-
-<!-- 印刷時のみ表示されるロゴ -->
-<div class="print-logo">
-  <div class="plogo-name">ふじもと歯科</div>
-  <div class="plogo-sub">患者説明資料</div>
-</div>
 
 <header>
   <div class="header-inner">
@@ -518,7 +445,7 @@
       <div class="dot"></div>
       <div class="dot"></div>
     </div>
-    <p>AIが説明資料を作成しています...<br>しばらくお待ちください</p>
+    <p>AIがプロ品質の説明資料を作成しています...<br>デザイン・レイアウトの生成中です。しばらくお待ちください</p>
   </div>
 
   <div class="card result-card" id="resultCard">
@@ -530,12 +457,14 @@
           <span id="copyText">コピー</span>
         </button>
         <button class="btn-pdf" onclick="printAsPDF()">
-          <span>🖨️</span> PDFで保存
+          🖨️ PDFで保存
+        </button>
+        <button class="btn-preview" onclick="openFullPreview()">
+          🔍 全画面プレビュー
         </button>
       </div>
     </div>
-    <div class="result-content" id="resultContent" contenteditable="true" spellcheck="false"></div>
-    <p class="edit-hint">✏️ クリックしてその場で文章を編集できます</p>
+    <iframe id="resultFrame" class="result-frame" sandbox="allow-same-origin"></iframe>
   </div>
 </main>
 
@@ -552,17 +481,7 @@
 </footer>
 
 <script>
-  const CLINIC_FOOTER = `
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ふじもと歯科
-〒590-0077 大阪府堺市堺区中瓦町2-3-14
-パーターさかもと銀座ビル2階
-TEL：050-1808-5701
-HP：https://shika-fujimoto.com/
-診療時間：月火木金 9:30〜19:00 / 土 9:30〜18:00
-休診日：水曜・日曜・祝日
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+  let currentResultHTML = '';
 
   async function generate() {
     const treatment = document.getElementById('treatment').value;
@@ -574,11 +493,11 @@ HP：https://shika-fujimoto.com/
       return;
     }
 
-    const btn      = document.getElementById('generateBtn');
-    const btnIcon  = document.getElementById('btnIcon');
-    const btnText  = document.getElementById('btnText');
-    const loading  = document.getElementById('loading');
-    const errorMsg = document.getElementById('errorMsg');
+    const btn        = document.getElementById('generateBtn');
+    const btnIcon    = document.getElementById('btnIcon');
+    const btnText    = document.getElementById('btnText');
+    const loading    = document.getElementById('loading');
+    const errorMsg   = document.getElementById('errorMsg');
     const resultCard = document.getElementById('resultCard');
 
     btn.disabled = true;
@@ -598,9 +517,19 @@ HP：https://shika-fujimoto.com/
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
 
-      document.getElementById('resultContent').textContent = data.result + CLINIC_FOOTER;
-      resultCard.classList.add('active');
+      let html = data.result.trim();
+      // マークダウンのコードブロックが含まれていた場合は除去
+      if (html.startsWith('```html')) html = html.slice(7);
+      else if (html.startsWith('```')) html = html.slice(3);
+      if (html.endsWith('```')) html = html.slice(0, -3);
+      html = html.trim();
 
+      currentResultHTML = html;
+
+      const frame = document.getElementById('resultFrame');
+      frame.srcdoc = html;
+
+      resultCard.classList.add('active');
       setTimeout(() => {
         resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 80);
@@ -622,13 +551,13 @@ HP：https://shika-fujimoto.com/
   }
 
   async function copyResult() {
-    const text = document.getElementById('resultContent').innerText;
+    if (!currentResultHTML) return;
     const icon = document.getElementById('copyIcon');
     const txt  = document.getElementById('copyText');
     const btn  = document.getElementById('copyBtn');
 
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(currentResultHTML);
       icon.textContent = '✅';
       txt.textContent  = 'コピー完了！';
       btn.classList.add('copied');
@@ -638,12 +567,23 @@ HP：https://shika-fujimoto.com/
         btn.classList.remove('copied');
       }, 2500);
     } catch {
-      alert('コピーに失敗しました。テキストを手動で選択してください。');
+      alert('コピーに失敗しました。');
     }
   }
 
   function printAsPDF() {
-    window.print();
+    const frame = document.getElementById('resultFrame');
+    if (frame && frame.contentWindow) {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+    }
+  }
+
+  function openFullPreview() {
+    if (!currentResultHTML) return;
+    const blob = new Blob([currentResultHTML], { type: 'text/html; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   }
 </script>
 
