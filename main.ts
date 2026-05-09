@@ -92,7 +92,7 @@ app.post("/api/generate", async (c) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 16000,
+        max_tokens: 8000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -104,9 +104,10 @@ app.post("/api/generate", async (c) => {
     }
 
     const data = await response.json();
-    const text = data.content[0].text;
+    const bodyContent = data.content[0].text;
+    const result = wrapInTemplate(bodyContent, treatment);
 
-    return c.json({ result: text });
+    return c.json({ result });
   } catch (err) {
     console.error("Error:", err);
     return c.json({ error: "サーバーエラーが発生しました" }, 500);
@@ -652,9 +653,9 @@ app.get("/admin/logs/csv", async (c) => {
 // ── Prompt builder ────────────────────────────────────────────────────────────
 
 function buildPrompt(treatment: string, patient: string, style: string): string {
-  return `あなたはふじもと歯科（堺市）のプロ品質の患者説明資料を作成する専門アシスタントです。
+  return `あなたはふじもと歯科（堺市）の患者説明資料を作成する専門アシスタントです。
 
-以下の条件で、HTMLとインラインCSSを使った視覚的に美しい患者説明資料を作成してください。
+以下の条件で患者説明資料の「本文コンテンツ」をHTMLで作成してください。
 
 【歯科医院情報】
 - 医院名：ふじもと歯科
@@ -664,45 +665,99 @@ function buildPrompt(treatment: string, patient: string, style: string): string 
 - HP：https://shika-fujimoto.com/
 - 院長：藤本直志
 
-【治療メニュー】
-${treatment}
+【治療メニュー】${treatment}
+【対象患者】${patient}
+【文章スタイル】${style}
 
-【対象患者】
-${patient}
+【出力するHTMLの構成（この順番で）】
+以下のdivブロックをすべて出力してください。CSSクラスは既に定義済みのものを使用：
 
-【文章スタイル】
-${style}
+1. <div class="sec blue">  ← 治療の概要（絵文字＋説明文）
+2. <div class="sec">チェックリスト  ← 治療の流れ（<div class="check">□ ステップ</div> 形式で4〜6項目）
+3. <div class="sec green">  ← 治療のメリット（✅絵文字付きリスト）
+4. <div class="sec pink">  ← 注意事項（⚠️付き箇条書き）
+5. <div class="bubble">  ← 吹き出しポイント（💡よくある質問と答え）
+6. <div class="sec yellow">  ← ふじもと歯科からのメッセージ（😊温かいメッセージ）
 
-【デザイン要件】
-- A4縦型（210mm×297mm）を意識したレイアウト
-- カラーブロックで情報を分割：
-  - ミントグリーン（#1D9E75）：ヘッダー・アクセント
-  - ライトブルー（#E8F4FD）：情報ブロック背景
-  - ライトピンク（#FDE8F0）：注意事項・ポイント背景
-  - ライトイエロー（#FDF8E8）：補足・メモ背景
-- 各セクションに大きな絵文字（🦷 😊 ✨ ⚠️ 📋 💡 など）を配置
-- チェックボックス形式のリスト（□ 項目）を含める
-- 吹き出しデザインのポイント欄を含める
-- フッターにふじもと歯科の情報を挿入
+【重要ルール】
+- CSSは一切書かないこと（すでにテンプレートに含まれている）
+- HTMLタグとテキストのみを出力すること
+- マークダウン（\`\`\`）は使わないこと
+- 上記6つのdivブロックをすべて含めること
 
-【構成】
-① ヘッダー：タイトル（大きく・カラフル）＋ふじもと歯科ロゴ文字
-② 治療の概要・目的（カラーブロック）
-③ 治療の流れ（ステップ・チェックボックスリスト）
-④ 治療のメリット（絵文字付きリスト）
-⑤ 注意事項・よくある質問（吹き出しデザイン）
-⑥ ふじもと歯科からのメッセージ
-⑦ フッター（医院情報）
+対象患者に合わせた言葉遣いで、絵文字を積極的に使い、読みやすく温かみのある内容にしてください。`;
+}
 
-【出力形式・重要ルール】
-- 完全なHTMLドキュメント（<!DOCTYPE html>から</html>まで）を必ず出力すること
-- <style>タグのCSSは最小限にする（30行以内）。装飾はインラインstyle属性を積極的に使うこと
-- Google Fonts（Noto Sans JP）を使用
-- @media printのCSSは不要
-- マークダウンのコードブロック（\`\`\`）は絶対に使わずHTMLのみ出力
-- コンテンツを省略・端折らないこと。すべてのセクション①〜⑦を必ず含めること
-
-対象患者に合わせた言葉遣いで、絵文字・カラーブロック・吹き出し・チェックボックスを積極的に使い、視覚的に美しい患者説明資料HTMLを作成してください。`;
+function wrapInTemplate(bodyContent: string, treatment: string): string {
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${treatment} | ふじもと歯科</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans JP', sans-serif; background: #f0f4f8; color: #333; font-size: 14px; line-height: 1.8; }
+.page { width: 210mm; min-height: 297mm; margin: 20px auto; background: #fff; box-shadow: 0 4px 30px rgba(0,0,0,0.15); overflow: hidden; }
+.header { background: linear-gradient(135deg, #1D9E75 0%, #0f5e45 100%); padding: 28px 30px; color: #fff; }
+.header h1 { font-size: 26px; font-weight: 900; letter-spacing: 2px; margin-bottom: 6px; }
+.header .subtitle { font-size: 13px; opacity: 0.85; }
+.header .clinic { text-align: right; margin-top: 12px; font-size: 18px; font-weight: 700; letter-spacing: 2px; }
+.accent { height: 6px; background: linear-gradient(90deg, #1D9E75, #45c49a, #f9d342, #f78e3d, #e85d8a); }
+.content { padding: 20px 28px; }
+.sec { border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; }
+.sec h2 { font-size: 16px; font-weight: 700; color: #1D9E75; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.sec p, .sec li { font-size: 13px; color: #444; line-height: 1.8; }
+.sec ul { padding-left: 20px; }
+.blue { background: #E8F4FD; border-left: 4px solid #5BA3D9; }
+.blue h2 { color: #2A72A8; }
+.green { background: #E8F6F1; border-left: 4px solid #1D9E75; }
+.pink { background: #FDE8F0; border-left: 4px solid #e85d8a; }
+.pink h2 { color: #c44070; }
+.yellow { background: #FDF8E8; border-left: 4px solid #e8c84a; }
+.yellow h2 { color: #8a6d00; }
+.check { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed #ccc; font-size: 13px; color: #444; }
+.check:last-child { border-bottom: none; }
+.cb { width: 18px; height: 18px; border: 2px solid #1D9E75; border-radius: 3px; flex-shrink: 0; margin-top: 2px; background: #fff; }
+.bubble { background: #FDF8E8; border: 2px solid #e8c84a; border-radius: 14px; padding: 16px 20px; margin-bottom: 16px; position: relative; }
+.bubble::before { content: '💡'; font-size: 22px; position: absolute; top: -14px; left: 18px; background: #fff; padding: 0 6px; }
+.bubble h2 { font-size: 15px; font-weight: 700; color: #8a6d00; margin-bottom: 10px; }
+.bubble p { font-size: 13px; color: #555; line-height: 1.8; }
+.footer { background: #2D3748; color: #CBD5E0; padding: 18px 28px; font-size: 11px; line-height: 2; }
+.footer strong { color: #fff; font-size: 14px; display: block; margin-bottom: 4px; }
+@media print {
+  @page { size: A4; margin: 0; }
+  body { background: #fff; }
+  .page { margin: 0; box-shadow: none; width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:11px;opacity:0.7;letter-spacing:1px;margin-bottom:6px;">患者説明資料</div>
+        <h1>🦷 ${treatment}</h1>
+        <div class="subtitle">ふじもと歯科より</div>
+      </div>
+      <div class="clinic">ふじもと歯科</div>
+    </div>
+  </div>
+  <div class="accent"></div>
+  <div class="content">
+    ${bodyContent}
+  </div>
+  <div class="footer">
+    <strong>ふじもと歯科</strong>
+    〒590-0077 大阪府堺市堺区中瓦町2-3-14 パーターさかもと銀座ビル2階　TEL: 050-1808-5701<br>
+    診療時間：月火木金 9:30〜13:30／15:00〜19:00　土 9:30〜13:30／14:30〜18:00　休診：水・日・祝<br>
+    HP: https://shika-fujimoto.com/　院長：藤本直志
+  </div>
+</div>
+</body>
+</html>`;
 }
 
 // ── Transcript proxies ───────────────────────────────────────────────────────
