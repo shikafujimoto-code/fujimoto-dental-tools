@@ -572,11 +572,14 @@
   }
 
   function printAsPDF() {
-    const frame = document.getElementById('resultFrame');
-    if (frame && frame.contentWindow) {
-      frame.contentWindow.focus();
-      frame.contentWindow.print();
-    }
+    if (!currentResultHTML) return;
+    const tag = 'script';
+    const autoprint = '<' + tag + '>window.onload=function(){window.print();}</' + tag + '>';
+    const printHTML = currentResultHTML.replace('</body>', autoprint + '</body>');
+    const blob = new Blob([printHTML], { type: 'text/html; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
   }
 
   function openFullPreview() {
