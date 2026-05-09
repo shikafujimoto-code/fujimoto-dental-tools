@@ -1,4 +1,4 @@
-﻿import { Hono } from "hono";
+﻿﻿import { Hono } from "hono";
 import { cors } from "jsr:@hono/hono/cors";
 
 const app = new Hono();
@@ -92,7 +92,7 @@ app.post("/api/generate", async (c) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 8096,
+        max_tokens: 16000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -694,12 +694,13 @@ ${style}
 ⑥ ふじもと歯科からのメッセージ
 ⑦ フッター（医院情報）
 
-【出力形式】
-- 完全なHTMLドキュメント（<!DOCTYPE html>〜</html>）を出力
-- CSSはすべて<style>タグ内またはインラインに記述
+【出力形式・重要ルール】
+- 完全なHTMLドキュメント（<!DOCTYPE html>から</html>まで）を必ず出力すること
+- <style>タグのCSSは最小限にする（30行以内）。装飾はインラインstyle属性を積極的に使うこと
 - Google Fonts（Noto Sans JP）を使用
-- @media printでA4印刷最適化（余白・改ページを適切に設定）
-- マークダウンのコードブロックは使わずHTMLのみ出力
+- @media printのCSSは不要
+- マークダウンのコードブロック（\`\`\`）は絶対に使わずHTMLのみ出力
+- コンテンツを省略・端折らないこと。すべてのセクション①〜⑦を必ず含めること
 
 対象患者に合わせた言葉遣いで、絵文字・カラーブロック・吹き出し・チェックボックスを積極的に使い、視覚的に美しい患者説明資料HTMLを作成してください。`;
 }
