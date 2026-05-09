@@ -325,6 +325,73 @@
     }
     .error-msg.active { display: block; }
 
+    /* ===== History ===== */
+    .history-empty {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 28px 0;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      background: var(--primary-light);
+      transition: box-shadow 0.2s;
+      gap: 12px;
+    }
+    .history-item:last-child { margin-bottom: 0; }
+    .history-item:hover { box-shadow: var(--shadow); }
+
+    .history-info { flex: 1; min-width: 0; }
+    .history-date { font-size: 0.76rem; color: var(--text-light); margin-bottom: 3px; }
+    .history-title {
+      font-size: 0.93rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-meta { font-size: 0.79rem; color: var(--text-light); margin-top: 2px; }
+
+    .history-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .btn-load {
+      padding: 7px 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-load:hover { background: var(--primary-dark); }
+
+    .btn-delete {
+      padding: 7px 12px;
+      background: white;
+      color: #E53E3E;
+      border: 2px solid #FC8181;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-delete:hover { background: #FFF5F5; border-color: #E53E3E; }
+
     /* ===== Footer ===== */
     footer {
       text-align: center;
@@ -346,13 +413,16 @@
       .result-actions { width: 100%; }
       .btn-copy, .btn-pdf, .btn-preview { flex: 1; justify-content: center; }
       .result-frame { height: 500px; }
+      .history-item { flex-direction: column; align-items: flex-start; }
+      .history-actions { width: 100%; }
+      .btn-load, .btn-delete { flex: 1; text-align: center; }
     }
 
     /* ===== Print CSS ===== */
     @media print {
       @page { size: A4; margin: 0; }
       header, footer, .setting-card, .error-msg, .loading,
-      .result-actions, .result-header { display: none !important; }
+      .result-actions, .result-header, .history-card { display: none !important; }
       body { background: white; }
       main { max-width: 100%; margin: 0; padding: 0; }
       .result-card { display: block !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
@@ -466,6 +536,13 @@
     </div>
     <iframe id="resultFrame" class="result-frame" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
   </div>
+
+  <div class="card history-card" id="historyCard">
+    <h2 class="card-title">📁 過去の履歴</h2>
+    <div id="historyList">
+      <p class="history-empty">まだ履歴がありません</p>
+    </div>
+  </div>
 </main>
 
 <footer>
@@ -483,6 +560,75 @@
 <script>
   let currentResultHTML = '';
 
+  // ===== History =====
+  const HISTORY_KEY = 'fujimoto_history';
+  const MAX_HISTORY = 20;
+
+  function getHistories() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveToHistory(treatment, patient, style, html) {
+    const histories = getHistories();
+    const now = new Date();
+    const pad = function(n) { return String(n).padStart(2, '0'); };
+    const date = now.getFullYear() + '/' + pad(now.getMonth()+1) + '/' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    histories.unshift({ date: date, treatment: treatment, patient: patient, style: style, html: html });
+    if (histories.length > MAX_HISTORY) histories.splice(MAX_HISTORY);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(histories));
+    renderHistory();
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderHistory() {
+    const histories = getHistories();
+    const list = document.getElementById('historyList');
+    if (histories.length === 0) {
+      list.innerHTML = '<p class="history-empty">まだ履歴がありません</p>';
+      return;
+    }
+    list.innerHTML = histories.map(function(h, i) {
+      return '<div class="history-item">'
+        + '<div class="history-info">'
+        + '<div class="history-date">🕐 ' + escHtml(h.date) + '</div>'
+        + '<div class="history-title">' + escHtml(h.treatment) + '</div>'
+        + '<div class="history-meta">' + escHtml(h.patient) + ' ／ ' + escHtml(h.style) + '</div>'
+        + '</div>'
+        + '<div class="history-actions">'
+        + '<button class="btn-load" onclick="loadHistory(' + i + ')">読み込む</button>'
+        + '<button class="btn-delete" onclick="deleteHistory(' + i + ')">削除</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function loadHistory(index) {
+    const histories = getHistories();
+    const h = histories[index];
+    if (!h) return;
+    document.getElementById('treatment').value = h.treatment;
+    document.getElementById('patient').value = h.patient;
+    document.getElementById('style').value = h.style;
+    currentResultHTML = h.html;
+    const frame = document.getElementById('resultFrame');
+    frame.srcdoc = h.html;
+    const resultCard = document.getElementById('resultCard');
+    resultCard.classList.add('active');
+    setTimeout(function() { resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+  }
+
+  function deleteHistory(index) {
+    const histories = getHistories();
+    histories.splice(index, 1);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(histories));
+    renderHistory();
+  }
+
+  // ===== Generate =====
   async function generate() {
     const treatment = document.getElementById('treatment').value;
     const patient   = document.getElementById('patient').value;
@@ -525,6 +671,7 @@
       html = html.trim();
 
       currentResultHTML = html;
+      saveToHistory(treatment, patient, style, html);
 
       const frame = document.getElementById('resultFrame');
       frame.srcdoc = html;
@@ -588,6 +735,9 @@
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   }
+
+  // ページ読み込み時に履歴を表示
+  renderHistory();
 </script>
 
 </body>
