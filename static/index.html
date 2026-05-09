@@ -302,6 +302,44 @@
     }
     .btn-preview:hover { background: #7B74E8; color: white; border-color: #7B74E8; }
 
+    .btn-edit {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.22s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 2px solid #9B8FE8;
+      background: #F5F3FF;
+      color: #5B50D6;
+    }
+    .btn-edit:hover { background: #9B8FE8; color: white; }
+    .btn-edit.active { background: #1D9E75; color: white; border-color: #1D9E75; }
+    .btn-edit.active:hover { background: #157A5A; border-color: #157A5A; }
+
+    .btn-reset {
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.22s;
+      white-space: nowrap;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      border: 2px solid #FC8181;
+      background: #FFF5F5;
+      color: #E53E3E;
+    }
+    .btn-reset:hover { background: #FC8181; color: white; }
+
     /* ===== Result Frame ===== */
     .result-frame {
       width: 100%;
@@ -522,6 +560,8 @@
     <div class="result-header">
       <h2 class="card-title">📄 生成された説明資料</h2>
       <div class="result-actions">
+        <button class="btn-edit" id="editBtn" onclick="toggleEditMode()">✏️ 編集する</button>
+        <button class="btn-reset" id="resetBtn" onclick="resetEdit()">↩️ 元に戻す</button>
         <button class="btn-copy" id="copyBtn" onclick="copyResult()">
           <span id="copyIcon">📋</span>
           <span id="copyText">コピー</span>
@@ -559,6 +599,76 @@
 
 <script>
   let currentResultHTML = '';
+
+  // ===== Edit Mode =====
+  let isEditMode = false;
+  let originalGeneratedHTML = '';
+  const EDIT_TARGETS = 'h1, h2, h3, p, li';
+
+  function toggleEditMode() {
+    if (!currentResultHTML) return;
+    if (!isEditMode) { enterEditMode(); } else { confirmEdit(); }
+  }
+
+  function enterEditMode() {
+    const frame = document.getElementById('resultFrame');
+    const doc = frame.contentDocument;
+    if (!doc || !doc.body) return;
+    originalGeneratedHTML = currentResultHTML;
+    const style = doc.createElement('style');
+    style.id = 'edit-mode-style';
+    style.textContent =
+      '[contenteditable]{cursor:text;transition:background .15s,outline .15s}' +
+      '[contenteditable]:hover{outline:2px dashed #1D9E75!important;background:rgba(29,158,117,.05)!important}' +
+      '[contenteditable]:focus{outline:2px solid #1D9E75!important;background:rgba(29,158,117,.09)!important;box-shadow:0 0 0 3px rgba(29,158,117,.15)}';
+    doc.head.appendChild(style);
+    doc.querySelectorAll(EDIT_TARGETS).forEach(function(el) {
+      el.setAttribute('contenteditable', 'true');
+      el.setAttribute('spellcheck', 'false');
+    });
+    isEditMode = true;
+    updateEditButtons();
+  }
+
+  function confirmEdit() {
+    const frame = document.getElementById('resultFrame');
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    var st = doc.getElementById('edit-mode-style');
+    if (st) st.remove();
+    doc.querySelectorAll('[contenteditable]').forEach(function(el) {
+      el.removeAttribute('contenteditable');
+      el.removeAttribute('spellcheck');
+    });
+    currentResultHTML = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+    isEditMode = false;
+    updateEditButtons();
+  }
+
+  function resetEdit() {
+    if (!originalGeneratedHTML) return;
+    const frame = document.getElementById('resultFrame');
+    currentResultHTML = originalGeneratedHTML;
+    frame.onload = function() {
+      frame.onload = null;
+      enterEditMode();
+    };
+    frame.srcdoc = originalGeneratedHTML;
+  }
+
+  function updateEditButtons() {
+    const editBtn  = document.getElementById('editBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    if (isEditMode) {
+      editBtn.textContent = '✅ 編集を確定する';
+      editBtn.classList.add('active');
+      resetBtn.style.display = 'flex';
+    } else {
+      editBtn.textContent = '✏️ 編集する';
+      editBtn.classList.remove('active');
+      resetBtn.style.display = 'none';
+    }
+  }
 
   // ===== History =====
   const HISTORY_KEY = 'fujimoto_history';
@@ -614,6 +724,8 @@
     document.getElementById('patient').value = h.patient;
     document.getElementById('style').value = h.style;
     currentResultHTML = h.html;
+    originalGeneratedHTML = h.html;
+    if (isEditMode) { isEditMode = false; updateEditButtons(); }
     const frame = document.getElementById('resultFrame');
     frame.srcdoc = h.html;
     const resultCard = document.getElementById('resultCard');
@@ -671,6 +783,8 @@
       html = html.trim();
 
       currentResultHTML = html;
+      originalGeneratedHTML = html;
+      if (isEditMode) { isEditMode = false; updateEditButtons(); }
       saveToHistory(treatment, patient, style, html);
 
       const frame = document.getElementById('resultFrame');
