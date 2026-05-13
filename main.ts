@@ -1,4 +1,4 @@
-﻿﻿import { Hono } from "hono";
+﻿import { Hono } from "hono";
 import { cors } from "jsr:@hono/hono/cors";
 
 const app = new Hono();
@@ -19,6 +19,15 @@ app.get("/", async (c) => {
     return c.html(html);
   } catch {
     return c.text("index.html not found", 404);
+  }
+});
+
+app.get("/instagram", async (c) => {
+  try {
+    const html = await Deno.readTextFile("./static/instagram.html");
+    return c.html(html);
+  } catch {
+    return c.text("instagram.html not found", 404);
   }
 });
 

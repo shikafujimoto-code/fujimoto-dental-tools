@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram投稿下書きプロンプト | ふじもと歯科</title>
+  <style>
+    :root {
+      --mint: #1d9e75;
+      --mint-dark: #157a5a;
+      --mint-soft: #e8f7f1;
+      --blue: #245d7a;
+      --ink: #23313d;
+      --muted: #6b7c8f;
+      --line: #dce7e3;
+      --paper: #ffffff;
+      --bg: #f5f8f7;
+      --warn: #fff7e8;
+      --warn-line: #f5c46d;
+      --radius: 18px;
+      --shadow: 0 18px 48px rgba(35, 49, 61, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(29, 158, 117, 0.13), transparent 34rem),
+        linear-gradient(180deg, #fbfdfc 0%, var(--bg) 100%);
+      line-height: 1.75;
+    }
+
+    header {
+      padding: 42px 22px 34px;
+      background: linear-gradient(135deg, #1d9e75 0%, #245d7a 100%);
+      color: white;
+      overflow: hidden;
+      position: relative;
+    }
+
+    header::before, header::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+    }
+
+    header::before { width: 260px; height: 260px; right: -90px; top: -120px; }
+    header::after { width: 180px; height: 180px; left: -60px; bottom: -90px; }
+
+    .hero {
+      max-width: 1180px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,0.36);
+      border-radius: 999px;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(1.75rem, 4vw, 3rem);
+      letter-spacing: 0.04em;
+      line-height: 1.28;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 0;
+      opacity: 0.92;
+      font-size: 1rem;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 52px;
+    }
+
+    .notice {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 16px 18px;
+      background: var(--warn);
+      border: 1px solid var(--warn-line);
+      border-radius: 16px;
+      margin-bottom: 22px;
+      color: #6b4a12;
+      font-size: 0.92rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(220, 231, 227, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff 0%, #f9fcfb 100%);
+    }
+
+    .card-head h2 {
+      margin: 0 0 4px;
+      font-size: 1.08rem;
+      color: var(--mint-dark);
+    }
+
+    .card-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .panel { padding: 20px 22px 22px; }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 0.92rem;
+    }
+
+    .required {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: var(--mint-soft);
+      color: var(--mint-dark);
+      font-size: 0.7rem;
+      vertical-align: middle;
+    }
+
+    select, textarea, input {
+      width: 100%;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 13px;
+      font: inherit;
+      color: var(--ink);
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    select:focus, textarea:focus, input:focus {
+      outline: none;
+      border-color: var(--mint);
+      box-shadow: 0 0 0 4px rgba(29, 158, 117, 0.13);
+    }
+
+    textarea { min-height: 112px; resize: vertical; }
+
+    .field { margin-bottom: 18px; }
+    .hint { margin-top: 6px; color: var(--muted); font-size: 0.78rem; }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    .primary { background: linear-gradient(135deg, var(--mint), var(--mint-dark)); color: white; box-shadow: 0 10px 22px rgba(29, 158, 117, 0.24); }
+    .secondary { background: var(--mint-soft); color: var(--mint-dark); }
+    .ghost { background: #eef4f6; color: var(--blue); }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 14px 14px 0;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 12px;
+      background: #f3f7f6;
+      color: var(--muted);
+      border-radius: 12px 12px 0 0;
+      box-shadow: none;
+      font-size: 0.86rem;
+    }
+
+    .tab.active { background: var(--mint); color: white; }
+
+    .output {
+      padding: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfdfc;
+    }
+
+    pre {
+      margin: 0;
+      padding: 22px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 560px;
+      font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+      font-size: 0.94rem;
+      line-height: 1.85;
+    }
+
+    .empty {
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      min-height: 560px;
+      padding: 28px;
+    }
+
+    .rule-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .rule {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdfc;
+      font-size: 0.83rem;
+    }
+
+    .rule strong { display: block; color: var(--mint-dark); margin-bottom: 2px; }
+
+    @media (max-width: 880px) {
+      .layout { grid-template-columns: 1fr; }
+      .buttons { grid-template-columns: 1fr; }
+      .rule-grid { grid-template-columns: 1fr; }
+      pre, .empty { min-height: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hero">
+      <div class="eyebrow">📱 Instagram Draft Prompt</div>
+      <h1>Instagram投稿下書き<br>プロンプト生成プロトタイプ</h1>
+      <p class="lead">医療法人ふじもと歯科の投稿設計書を、毎週の運用で使いやすい入力フォームにしました。テーマを選ぶと、AIへ送る完成プロンプトと確認用のサンプル下書きを生成します。</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="notice">
+      <strong>⚠️</strong>
+      <div>この画面は下書き作成を補助するプロトタイプです。生成した文章は、投稿前に必ず院長または責任者が内容・日付・医療広告ガイドライン上の表現を確認してください。</div>
+    </div>
+
+    <div class="layout">
+      <section class="card">
+        <div class="card-head">
+          <h2>投稿条件を入力</h2>
+          <p>カテゴリーごとに必要な情報だけを入力できます。</p>
+        </div>
+        <div class="panel">
+          <div class="field">
+            <label for="category">カテゴリー <span class="required">必須</span></label>
+            <select id="category"></select>
+          </div>
+
+          <div class="field">
+            <label for="subtheme">サブテーマ <span class="required">必須</span></label>
+            <select id="subtheme"></select>
+          </div>
+
+          <div class="field" id="detailsField">
+            <label for="details">具体的な内容</label>
+            <textarea id="details" placeholder="日時・対象・募集条件・伝えたい特徴などを入力してください。"></textarea>
+            <div class="hint" id="detailsHint"></div>
+          </div>
+
+          <div class="field">
+            <label for="toneMemo">追加メモ（任意）</label>
+            <textarea id="toneMemo" placeholder="例：今週は梅雨入りに触れる／やわらかい表現を多めにする など"></textarea>
+          </div>
+
+          <div class="buttons">
+            <button class="primary" id="generateBtn">下書きを生成</button>
+            <button class="secondary" id="promptBtn">プロンプト確認</button>
+          </div>
+
+          <div class="rule-grid" aria-label="安全ルール">
+            <div class="rule"><strong>断定回避</strong>「必ず」「絶対」「100%」などを避けます。</div>
+            <div class="rule"><strong>体験談なし</strong>口コミ・Before/After的表現は入れません。</div>
+            <div class="rule"><strong>文字数目安</strong>本文250〜400文字、絵文字3〜5個。</div>
+            <div class="rule"><strong>タグ構成</strong>地域・歯科一般・テーマ固有で15〜20個。</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card output">
+        <div class="tabs">
+          <button class="tab active" data-view="draft">下書き</button>
+          <button class="tab" data-view="prompt">AI用プロンプト</button>
+        </div>
+        <div class="toolbar">
+          <button class="ghost" id="copyBtn">表示内容をコピー</button>
+          <button class="ghost" id="resetBtn">入力をリセット</button>
+        </div>
+        <div id="empty" class="empty">左の条件を選び「下書きを生成」を押してください。<br>実際のAI接続前でも、出力形式と運用イメージを確認できます。</div>
+        <pre id="output" hidden></pre>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const COMMON_PROMPT = `# 役割
+あなたは、大阪府堺市にある「医療法人ふじもと歯科」のSNS担当ライターです。
+歯科医療の知識と、医療広告ガイドラインへの深い理解を持ち、患者さんに優しく語りかける文章を書きます。
+
+# 投稿の基本方針
+- 読者ターゲット：30〜60代の地域住民（堺市周辺）。歯科に詳しくない一般の方。
+- トーン：親しみやすく、丁寧で、専門家としての信頼感がある。先輩衛生士が後輩や患者さんに話しかけるような温度感。
+- 一人称：「ふじもと歯科」または「私たち」
+- 文体：です・ます調
+
+# 必ず守るルール（医療広告ガイドライン対応）
+以下の表現は絶対に使わないでください：
+- 「日本一」「世界一」「最高」「最先端」「絶対」「必ず治る」「100%」など最上級・断定的表現
+- 「痛くない」「絶対安全」「副作用なし」など効果やリスクの断定
+- 患者さんの体験談・口コミ・Before/After的な描写
+- 他院との比較（「他院ではできない」など）
+- 公的医療保険外の自由診療を推奨する際の、効果の断定的表現
+- 芸能人・有名人の利用に関する記述
+
+# 書き方の原則
+- 1投稿は日本語で250〜400文字を目安にする（Instagramキャプションとして読みやすい長さ）
+- 冒頭1行で読者の関心を引く（質問形・気づき・季節の話題など）
+- 専門用語を使うときは必ず一般用語で言い換える
+- 数字や根拠を入れて説得力を高める（ただし誇張は厳禁）
+- 最後に行動を促す一文を入れる（例：「お気軽にご相談ください」）
+- 絵文字は1投稿につき3〜5個まで。多用しない。
+
+# ハッシュタグのルール
+- 合計15〜20個
+- 内訳：地域系（堺市・大阪）5個、歯科一般5個、テーマ固有5〜10個
+- #ふじもと歯科 を必ず含める
+
+# 出力形式
+以下の形式で出力してください：
+
+【投稿本文】
+（ここに本文）
+
+【ハッシュタグ】
+（ここにハッシュタグをスペース区切りで）
+
+【画像案】
+（このテーマに合うCanvaテンプレート案を1〜2行で）
+
+【投稿に関する注意点】
+（医療広告ガイドライン上、特に確認してほしい点があれば）`;
+
+    const DATA = {
+      periodontal: {
+        label: "歯周病・メンテナンス患者教育",
+        detailsHint: "通常は未入力でOKです。季節感や医院で特に伝えたいことがあれば入力してください。",
+        subthemes: ["歯周病が全身疾患（糖尿病・心疾患・誤嚥性肺炎など）に与える影響", "歯ぐきからの出血のサインと放置のリスク", "セルフケアの限界（なぜプロのクリーニングが必要か）", "メンテナンス間隔（3か月）の科学的根拠", "加齢と歯周病の関係", "妊娠・更年期とお口の健康", "噛む力と認知症予防", "唾液の役割と量の変化"],
+        prompt: (subtheme, details, memo) => `# 今回のテーマ
+カテゴリー：歯周病・メンテナンス患者教育
+サブテーマ：${subtheme}
+${details ? `具体的な補足：${details}\n` : ""}${memo ? `追加メモ：${memo}\n` : ""}
+# このテーマで特に意識してほしいこと
+- 「怖がらせる」のではなく「知って予防につなげる」温度感
+- 治療よりも予防・継続の価値を伝える
+- メンテナンスは「終わり」ではなく「健康を守り続ける旅」というメッセージを根底に置く
+- 来院を急かさない。あくまで知識提供が主、行動喚起は最後にやさしく
+
+# 表現の制約（このテーマ特有）
+- 「歯周病は治る」と断定しない →「進行を抑える」「コントロールする」など
+- 特定の歯磨き粉・歯ブラシ製品の推奨はしない
+- 治療法の効果を保証する表現は避ける
+- 数字を使うときは出典のある一般的な統計に留める
+
+# 投稿構成テンプレート
+1. 冒頭（読者の気づきを誘う問いかけ or 季節・日常の話題）30〜50文字
+2. 課題の提示（「実はこんなことが…」）80〜120文字
+3. 仕組みの説明（やさしく原理を解説）80〜120文字
+4. 解決のヒント（セルフケアでできること＋プロケアの価値）60〜100文字
+5. 行動喚起（やさしく）20〜40文字
+
+それでは、上記サブテーマで1投稿分の下書きを作成してください。`,
+      },
+      announcement: {
+        label: "キャンペーン・お知らせ",
+        detailsHint: "休診日、再開日、対象、予約方法、急患窓口など、正確に伝えたい情報を入力してください。",
+        subthemes: ["年末年始・お盆など長期休診のお知らせ", "臨時休診・診療時間変更のお知らせ", "季節の検診キャンペーン（入学前・新生活前など）", "新しい設備・機器の導入報告", "学会参加・院内研修報告（教育に力を入れている姿勢の発信）", "健康月間（6月の歯と口の健康週間など）に合わせた啓発"],
+        prompt: (subtheme, details, memo) => `# 今回のテーマ
+カテゴリー：キャンペーン・お知らせ
+サブテーマ：${subtheme}
+具体的な内容：${details || "【日時・対象・詳細を入力してください】"}
+${memo ? `追加メモ：${memo}\n` : ""}
+# このテーマで特に意識してほしいこと
+- 情報を「正確に・わかりやすく・見落とされないように」伝える
+- 患者さんが困らないよう、休診中の対応（急患窓口など）も必ず明記
+- お知らせ系でも医院の温かみを感じてもらえる文章にする
+- 季節の挨拶を自然に織り込む
+
+# 表現の制約（このテーマ特有）
+- 自由診療の値引き・割引・無料表現は使わない
+- 「先着○名様」「今だけ」など射幸心を煽る表現は使わない
+- 保険診療の検診や公的制度（節目検診など）の案内は問題ないので積極的に使用可
+
+# 投稿構成テンプレート（お知らせ系）
+1. 挨拶＋季節の話題 40〜60文字
+2. お知らせの本題（日付・時間・対象を明確に）100〜150文字
+3. 患者さんへの配慮（急患対応など）60〜100文字
+4. 締めの一言（来年もよろしく等）30〜50文字
+
+# 投稿構成テンプレート（キャンペーン・啓発系）
+1. 季節やイベントに絡めた切り口 40〜60文字
+2. 今回の取り組み・キャンペーンの内容 100〜150文字
+3. 参加・利用方法（予約方法など）60〜100文字
+4. やさしい行動喚起 30〜40文字
+
+それでは、上記の情報で1投稿分の下書きを作成してください。`,
+      },
+      recruit: {
+        label: "採用情報",
+        detailsHint: "職種、募集条件、教育体制、スタッフへ伝えたい魅力などを入力してください。給与の具体額は本文に出さない運用です。",
+        subthemes: ["採用募集の告知（職種・条件を明示）", "教育体制の紹介（メンテUP・院内研修・症例検討など）", "スタッフインタビュー（働きやすさ・成長実感）", "医院の1日（業務の流れ・院内の雰囲気）", "福利厚生・キャリアパスの紹介", "勉強会・セミナー参加報告"],
+        prompt: (subtheme, details, memo) => `# 今回のテーマ
+カテゴリー：採用情報
+サブテーマ：${subtheme}
+具体的な内容：${details || "【職種・募集条件・伝えたい医院の特徴などを入力してください】"}
+${memo ? `追加メモ：${memo}\n` : ""}
+# ふじもと歯科の採用ターゲット像
+- 歯科衛生士：予防・メンテナンスに本気で取り組みたい人。患者さんと長く向き合いたい人。
+- 歯科助手・受付：医療現場で人の役に立ちたい人。チームワークを大切にできる人。
+
+# このテーマで特に意識してほしいこと
+- 「条件」より「環境・成長・やりがい」を前面に
+- 院長・スタッフの人柄が伝わる温度感
+- 「未経験でも安心」「ブランクOK」など、応募ハードルを下げる表現も適宜
+- 求人媒体の文章とは違う、Instagramならではの親しみやすさ
+
+# 表現の制約（このテーマ特有）
+- 給与・待遇の具体的金額はキャプションに書かず「詳しくはDMで」など誘導
+- 「アットホーム」「やりがいのある職場」など使い古された表現は避ける
+- 具体的なエピソードや数字（勉強会の頻度、在籍年数など）で説得力を出す
+- 競合医院の批判は絶対にしない
+
+# 投稿構成テンプレート
+1. 共感を誘う冒頭 40〜60文字
+2. ふじもと歯科の特徴・取り組みの紹介 120〜180文字
+3. 働く人のリアルな声・具体的な仕組み 80〜120文字
+4. 応募・問い合わせへのやさしい誘導 30〜50文字
+
+それでは、上記の情報で1投稿分の下書きを作成してください。`,
+      },
+    };
+
+    const categoryEl = document.getElementById("category");
+    const subthemeEl = document.getElementById("subtheme");
+    const detailsEl = document.getElementById("details");
+    const memoEl = document.getElementById("toneMemo");
+    const detailsHintEl = document.getElementById("detailsHint");
+    const outputEl = document.getElementById("output");
+    const emptyEl = document.getElementById("empty");
+    let currentView = "draft";
+    let currentDraft = "";
+    let currentPrompt = "";
+
+    function init() {
+      categoryEl.innerHTML = Object.entries(DATA).map(([key, value]) => `<option value="${key}">${value.label}</option>`).join("");
+      updateSubthemes();
+      categoryEl.addEventListener("change", updateSubthemes);
+      document.getElementById("generateBtn").addEventListener("click", () => render("draft"));
+      document.getElementById("promptBtn").addEventListener("click", () => render("prompt"));
+      document.getElementById("copyBtn").addEventListener("click", copyCurrent);
+      document.getElementById("resetBtn").addEventListener("click", resetForm);
+      document.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => render(tab.dataset.view)));
+    }
+
+    function updateSubthemes() {
+      const data = DATA[categoryEl.value];
+      subthemeEl.innerHTML = data.subthemes.map((theme) => `<option value="${theme}">${theme}</option>`).join("");
+      detailsHintEl.textContent = data.detailsHint;
+      detailsEl.value = "";
+    }
+
+    function buildFullPrompt() {
+      const data = DATA[categoryEl.value];
+      return `${COMMON_PROMPT}\n\n${data.prompt(subthemeEl.value, detailsEl.value.trim(), memoEl.value.trim())}`;
+    }
+
+    function generateSampleDraft() {
+      const category = categoryEl.value;
+      const subtheme = subthemeEl.value;
+      const details = detailsEl.value.trim();
+      const memo = memoEl.value.trim();
+
+      if (category === "announcement") {
+        const mainInfo = details || "診療日程や対象などの詳細を入力してから、実際の投稿前に再生成してください。";
+        return `【投稿本文】\n季節の変わり目は、予定の確認も忘れずにしておきたいですね🍃\n\nふじもと歯科から「${subtheme}」についてのお知らせです。${mainInfo}\n\n休診日や変更時間の前後はご予約が混み合う場合があります。気になる症状がある方、定期検診をご希望の方は、余裕をもってご連絡ください。\n\nご不便をおかけする場合もございますが、どうぞよろしくお願いいたします🌿\n\n【ハッシュタグ】\n#ふじもと歯科 #堺市歯医者 #堺東歯科 #大阪歯科 #堺市 #歯科医院 #歯医者 #予防歯科 #定期検診 #お口の健康 #医院からのお知らせ #診療案内 #歯科検診 #地域医療 #大阪\n\n【画像案】\nCanvaテンプレート「医院お知らせ_日付強調」を使用。白背景にミントグリーンの帯を入れ、日付・時間が一目で分かるレイアウト。\n\n【投稿に関する注意点】\n- 日付・曜日・診療時間・急患窓口は投稿前に必ず最新情報で確認してください。\n- 自由診療の値引きや「今だけ」などの表現は入れていません。`;
+      }
+
+      if (category === "recruit") {
+        const mainInfo = details || "教育体制や職種などの具体情報を入力すると、より実際の募集に近い下書きになります。";
+        return `【投稿本文】\n歯科の仕事で、患者さんとじっくり向き合える時間を大切にしたい方へ🦷\n\nふじもと歯科では「${subtheme}」について、Instagramでも少しずつ発信していきます。${mainInfo}\n\n日々の診療では、先輩スタッフが確認しながら段階的に慣れていける流れを大切にしています。予防やメンテナンスに関心がある方も、まずは医院の雰囲気を知るところからで大丈夫です。\n\n気になった方は、DMから気軽にメッセージくださいね🌿\n\n【ハッシュタグ】\n#ふじもと歯科 #堺市歯医者 #堺東歯科 #大阪歯科 #堺市 #歯科衛生士 #歯科助手 #受付スタッフ #歯科求人 #歯科採用 #予防歯科 #メンテナンス #堺市求人 #大阪求人 #歯科医院で働く\n\n【画像案】\nCanvaテンプレート「採用_スタッフ導線紹介」を使用。医院カラーのミントグリーンを基調に、写真1枚＋短いコピーで親しみやすく。\n\n【投稿に関する注意点】\n- 給与などの具体的な待遇額は記載せず、問い合わせ導線に留めています。\n- 競合比較や過度に一般的な採用コピーは避けています。`;
+      }
+
+      const suffix = memo ? `\n\n（追加メモ反映：${memo}）` : "";
+      return `【投稿本文】\n歯ぐきやお口の変化、「少しだけだから」と見過ごしていませんか？🪥\n\n今回は「${subtheme}」についてのお話です。お口の状態は、毎日の歯みがきだけで分かることもあれば、歯科で確認して初めて気づける小さな変化もあります。\n\n歯と歯ぐきの境目には、細菌のかたまり（プラーク）がたまりやすく、炎症や違和感につながることがあります。状態によっては、歯周病の進行を抑えるために継続的なチェックが役立つ場合があります。\n\nセルフケアに加えて、3か月ごとのメンテナンスでお口の健康を一緒に守っていきましょう🌿\n\n気になることがあれば、お気軽にご相談くださいね。${suffix}\n\n【ハッシュタグ】\n#ふじもと歯科 #堺市歯医者 #堺東歯科 #大阪歯科 #堺市 #歯周病 #歯周病予防 #歯科衛生士 #予防歯科 #定期検診 #メンテナンス #オーラルケア #お口の健康 #ホームケア #セルフケア #健康寿命\n\n【画像案】\nCanvaテンプレート「歯周病シリーズ_質問形」を使用。淡いミントグリーン背景に、メインコピー「その変化、見直しのサインかも？」を配置。\n\n【投稿に関する注意点】\n- 「治る」ではなく「進行を抑える」「役立つ場合」と表現し、効果保証を避けています。\n- 特定製品の推奨や体験談は入れていません。`;
+    }
+
+    function render(view) {
+      currentPrompt = buildFullPrompt();
+      if (!currentDraft) currentDraft = generateSampleDraft();
+      if (view === "draft") currentDraft = generateSampleDraft();
+      currentView = view;
+      document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.view === view));
+      outputEl.textContent = view === "prompt" ? currentPrompt : currentDraft;
+      outputEl.hidden = false;
+      emptyEl.hidden = true;
+    }
+
+    async function copyCurrent() {
+      const text = outputEl.hidden ? "" : outputEl.textContent;
+      if (!text) return;
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById("copyBtn");
+      const old = btn.textContent;
+      btn.textContent = "コピーしました";
+      setTimeout(() => btn.textContent = old, 1200);
+    }
+
+    function resetForm() {
+      categoryEl.value = "periodontal";
+      updateSubthemes();
+      memoEl.value = "";
+      currentDraft = "";
+      currentPrompt = "";
+      outputEl.hidden = true;
+      emptyEl.hidden = false;
+      document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.view === "draft"));
+    }
+
+    init();
+  </script>
+</body>
+</html>
