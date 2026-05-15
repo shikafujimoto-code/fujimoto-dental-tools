@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ふじもと歯科 | Instagram投稿作成アプリ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1D9E75;
+      --primary-dark: #157A5A;
+      --primary-light: #E6F6F1;
+      --accent: #F6C144;
+      --bg: #F4F7F6;
+      --card: #FFFFFF;
+      --text: #2D3748;
+      --text-light: #718096;
+      --border: #E2E8F0;
+      --danger: #C53030;
+      --danger-bg: #FFF5F5;
+      --shadow: 0 4px 18px rgba(0,0,0,0.08);
+      --radius: 18px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.75;
+    }
+
+    header {
+      background: radial-gradient(circle at 85% 15%, rgba(255,255,255,.18), transparent 24%),
+        linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 42px 16px 36px;
+      text-align: center;
+    }
+
+    .logo-circle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.18);
+      border: 2px solid rgba(255,255,255,.28);
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+
+    h1 { font-size: 1.8rem; letter-spacing: .06em; margin-bottom: 8px; }
+    .header-sub { font-size: .92rem; opacity: .9; }
+
+    main { max-width: 980px; margin: 0 auto; padding: 34px 16px 64px; }
+
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .nav-links a {
+      color: var(--primary-dark);
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 14px;
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 600;
+    }
+
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 20px; }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0,0,0,.04);
+      padding: 28px;
+      margin-bottom: 22px;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+      padding-bottom: 12px;
+      margin-bottom: 22px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 8px; }
+    .hint { color: var(--text-light); font-size: .78rem; margin-top: 5px; }
+    .badge { background: var(--primary); color: white; border-radius: 999px; font-size: .62rem; padding: 2px 8px; margin-left: 6px; }
+
+    input, textarea, select {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font: inherit;
+      font-size: .95rem;
+      color: var(--text);
+      background: white;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    textarea { min-height: 94px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29,158,117,.14);
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .btn {
+      border: 0;
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .2s, opacity .2s, box-shadow .2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      color: white;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      box-shadow: 0 6px 18px rgba(29,158,117,.22);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    .btn-secondary { background: var(--primary-light); color: var(--primary-dark); border: 1px solid var(--primary); padding: 9px 13px; font-size: .84rem; }
+    .btn-ghost { background: #FFF8E6; color: #815B08; border: 1px solid var(--accent); padding: 9px 13px; font-size: .84rem; }
+
+    .rule-list { padding-left: 1.1em; font-size: .84rem; color: var(--text-light); }
+    .rule-list li { margin-bottom: 6px; }
+
+    .error, .loading { display: none; margin-bottom: 18px; border-radius: var(--radius-sm); padding: 13px 16px; font-size: .9rem; }
+    .error { color: var(--danger); background: var(--danger-bg); border: 1px solid #FC8181; }
+    .loading { color: var(--primary-dark); background: var(--primary-light); border: 1px solid rgba(29,158,117,.24); }
+    .error.active, .loading.active { display: block; }
+
+    .result-card { display: none; }
+    .result-card.active { display: block; animation: fadeIn .28s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .result-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .result-output {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #FBFCFD;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      min-height: 320px;
+      font-size: .94rem;
+    }
+
+    .check-panel {
+      border-radius: 14px;
+      background: #F7FAFC;
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      font-size: .84rem;
+      color: var(--text-light);
+      margin-top: 14px;
+    }
+    .check-panel strong { color: var(--text); }
+
+    .history-empty { text-align: center; color: var(--text-light); font-size: .88rem; padding: 18px 0; }
+    .history-item { border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #FAFFFD; }
+    .history-date { font-size: .74rem; color: var(--text-light); }
+    .history-title { font-weight: 700; font-size: .88rem; margin: 2px 0 8px; }
+    .history-actions { display: flex; gap: 8px; }
+    .history-actions button { flex: 1; padding: 7px 8px; font-size: .78rem; }
+
+    footer { text-align: center; color: var(--text-light); font-size: .82rem; padding: 28px 16px 42px; }
+    footer a { color: var(--primary-dark); }
+
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .card { padding: 22px; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-circle">📱</div>
+    <h1>Instagram投稿作成アプリ</h1>
+    <p class="header-sub">ふじもと歯科のSNS投稿を、医療広告ガイドラインに配慮して作成します</p>
+  </header>
+
+  <main>
+    <div class="nav-links">
+      <a href="/">患者説明資料</a>
+      <a href="/demo">デモ</a>
+      <a href="/blog">ブログ作成</a>
+    </div>
+
+    <div class="grid">
+      <section>
+        <div class="card">
+          <h2 class="card-title">✍️ 投稿条件</h2>
+          <div class="form-group">
+            <label for="theme">投稿テーマ <span class="badge">必須</span></label>
+            <input id="theme" placeholder="例：歯周病予防、定期検診、ホワイトニング前の注意点">
+            <p class="hint">自由診療を含む場合は、リスクや個人差に触れる投稿になります。</p>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <label for="audience">読者ターゲット</label>
+              <select id="audience">
+                <option value="30〜60代の堺市周辺にお住まいの方">30〜60代の地域住民</option>
+                <option value="小さなお子さんがいる保護者の方">子育て世代</option>
+                <option value="仕事や家事で忙しい成人の方">忙しい成人</option>
+                <option value="歯ぐきや入れ歯が気になる中高年の方">中高年</option>
+                <option value="歯科医院が久しぶりで不安な方">受診が久しぶりの方</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="count">作成数</label>
+              <select id="count">
+                <option value="1">1投稿</option>
+                <option value="3">3投稿</option>
+                <option value="5">5投稿</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <label for="tone">トーン</label>
+              <select id="tone">
+                <option value="親しみやすく、丁寧で、専門家として信頼感がある">標準：親しみ・丁寧</option>
+                <option value="季節感を入れてやさしく話しかける">季節感あり</option>
+                <option value="予防意識を高めるが、不安をあおらない">予防啓発</option>
+                <option value="短めで読みやすく、保存したくなる">短め・保存向き</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cta">最後の行動喚起</label>
+              <select id="cta">
+                <option value="気になることがあれば、お気軽にご相談ください">相談促進</option>
+                <option value="定期検診のご予約はお電話またはホームページからご確認ください">予約導線</option>
+                <option value="お口の状態に合わせて一緒に確認していきましょう">安心訴求</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="notes">入れたい内容・避けたい内容</label>
+            <textarea id="notes" placeholder="例：堺東駅から徒歩2分を入れたい／費用の断定は避けたい／6月の歯と口の健康週間に合わせたい"></textarea>
+          </div>
+
+          <button class="btn btn-primary" id="generateBtn" onclick="generatePost()">
+            <span id="btnIcon">✨</span><span id="btnText">投稿を作成する</span>
+          </button>
+        </div>
+
+        <div class="error" id="errorBox"></div>
+        <div class="loading" id="loadingBox">⏳ AIが投稿本文・ハッシュタグ・画像案を作成しています。少しお待ちください。</div>
+
+        <div class="card result-card" id="resultCard">
+          <h2 class="card-title">📄 生成結果</h2>
+          <div class="result-actions">
+            <button class="btn btn-secondary" onclick="copyResult()" id="copyBtn">📋 コピー</button>
+            <button class="btn btn-ghost" onclick="downloadTxt()">⬇ テキスト保存</button>
+          </div>
+          <div class="result-output" id="resultOutput"></div>
+          <div class="check-panel" id="checkPanel"></div>
+        </div>
+      </section>
+
+      <aside>
+        <div class="card">
+          <h2 class="card-title">✅ 投稿ルール</h2>
+          <ul class="rule-list">
+            <li>本文は250〜400文字を目安にします。</li>
+            <li>絵文字は1投稿3〜5個に抑えます。</li>
+            <li>「必ず治る」「痛くない」などの断定表現は避けます。</li>
+            <li>患者さんの体験談やBefore/Afterのような表現は使いません。</li>
+            <li>ハッシュタグは15〜20個、#ふじもと歯科 を含めます。</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">📁 ローカル履歴</h2>
+          <div id="historyList"><p class="history-empty">まだ履歴がありません</p></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <strong>ふじもと歯科</strong><br>
+    大阪府堺市堺区中瓦町2-3-14 パーターさかもと銀座ビル2階 / TEL: <a href="tel:050-1808-5701">050-1808-5701</a><br>
+    Instagram: <a href="https://www.instagram.com/fujimotoshika/" target="_blank" rel="noopener">@fujimotoshika</a>
+  </footer>
+
+  <script>
+    const HISTORY_KEY = 'fujimoto_instagram_history';
+    const MAX_HISTORY = 20;
+    let currentResult = '';
+
+    function getHistories() {
+      try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+      catch { return []; }
+    }
+
+    function saveHistory(theme, text) {
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const date = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const histories = getHistories();
+      histories.unshift({ date, theme, text });
+      if (histories.length > MAX_HISTORY) histories.splice(MAX_HISTORY);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(histories));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      const histories = getHistories();
+      if (!histories.length) {
+        list.innerHTML = '<p class="history-empty">まだ履歴がありません</p>';
+        return;
+      }
+      list.innerHTML = histories.map((h, i) => `
+        <div class="history-item">
+          <div class="history-date">${escapeHtml(h.date)}</div>
+          <div class="history-title">${escapeHtml(h.theme || 'Instagram投稿')}</div>
+          <div class="history-actions">
+            <button class="btn btn-secondary" onclick="loadHistory(${i})">表示</button>
+            <button class="btn btn-ghost" onclick="deleteHistory(${i})">削除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function loadHistory(index) {
+      const h = getHistories()[index];
+      if (!h) return;
+      currentResult = h.text;
+      document.getElementById('resultOutput').textContent = h.text;
+      updateCheckPanel(h.text, []);
+      document.getElementById('resultCard').classList.add('active');
+      document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function deleteHistory(index) {
+      const histories = getHistories();
+      histories.splice(index, 1);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(histories));
+      renderHistory();
+    }
+
+    async function generatePost() {
+      const payload = {
+        theme: document.getElementById('theme').value.trim(),
+        audience: document.getElementById('audience').value,
+        count: Number(document.getElementById('count').value),
+        tone: document.getElementById('tone').value,
+        cta: document.getElementById('cta').value,
+        notes: document.getElementById('notes').value.trim(),
+      };
+
+      if (!payload.theme) {
+        showError('投稿テーマを入力してください。');
+        return;
+      }
+
+      const btn = document.getElementById('generateBtn');
+      const btnIcon = document.getElementById('btnIcon');
+      const btnText = document.getElementById('btnText');
+      const loading = document.getElementById('loadingBox');
+      const error = document.getElementById('errorBox');
+      const resultCard = document.getElementById('resultCard');
+
+      btn.disabled = true;
+      btnIcon.textContent = '⏳';
+      btnText.textContent = '作成中...';
+      loading.classList.add('active');
+      error.classList.remove('active');
+      resultCard.classList.remove('active');
+
+      try {
+        const res = await fetch('/api/instagram/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '投稿作成に失敗しました');
+        currentResult = String(data.result || '').trim();
+        document.getElementById('resultOutput').textContent = currentResult;
+        updateCheckPanel(currentResult, data.warnings || []);
+        saveHistory(payload.theme, currentResult);
+        resultCard.classList.add('active');
+        setTimeout(() => resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btnIcon.textContent = '✨';
+        btnText.textContent = '投稿を作成する';
+        loading.classList.remove('active');
+      }
+    }
+
+    function updateCheckPanel(text, warnings) {
+      const hashtagCount = (text.match(/#[^\s#]+/g) || []).length;
+      const bodySections = (text.match(/【投稿本文】/g) || []).length || 1;
+      const warningHtml = warnings.length
+        ? '<br><strong>要確認:</strong> ' + warnings.map(escapeHtml).join(' / ')
+        : '<br><strong>要確認:</strong> 投稿前に院内で内容・費用・リスク表記をご確認ください。';
+      document.getElementById('checkPanel').innerHTML =
+        `<strong>簡易チェック:</strong> 投稿数 ${bodySections}件 / ハッシュタグ ${hashtagCount}個${warningHtml}`;
+    }
+
+    async function copyResult() {
+      if (!currentResult) return;
+      await navigator.clipboard.writeText(currentResult);
+      const btn = document.getElementById('copyBtn');
+      const old = btn.textContent;
+      btn.textContent = '✅ コピー完了';
+      setTimeout(() => { btn.textContent = old; }, 1800);
+    }
+
+    function downloadTxt() {
+      if (!currentResult) return;
+      const blob = new Blob([currentResult], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'fujimoto-instagram-post.txt';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    }
+
+    function showError(message) {
+      const el = document.getElementById('errorBox');
+      el.textContent = '⚠️ ' + message;
+      el.classList.add('active');
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    renderHistory();
+  </script>
+</body>
+</html>

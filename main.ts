@@ -31,6 +31,15 @@ app.get("/demo", async (c) => {
   }
 });
 
+app.get("/instagram", async (c) => {
+  try {
+    const html = await Deno.readTextFile("./static/instagram.html");
+    return c.html(html);
+  } catch {
+    return c.text("instagram.html not found", 404);
+  }
+});
+
 app.get("/transcript", async (c) => {
   if (!checkBasicAuth(c.req.raw, "TRANSCRIPT_PASSWORD")) {
     return unauthorizedResponse();
@@ -110,6 +119,72 @@ app.post("/api/generate", async (c) => {
     return c.json({ result });
   } catch (err) {
     console.error("Error:", err);
+    return c.json({ error: "サーバーエラーが発生しました" }, 500);
+  }
+});
+
+interface InstagramGenerateRequest {
+  theme: string;
+  audience?: string;
+  count?: number;
+  tone?: string;
+  cta?: string;
+  notes?: string;
+}
+
+app.post("/api/instagram/generate", async (c) => {
+  try {
+    const body = await c.req.json<InstagramGenerateRequest>();
+    const theme = body.theme?.trim();
+    const requestedCount = Number(body.count ?? 1);
+    const count = Number.isFinite(requestedCount)
+      ? Math.min(Math.max(requestedCount, 1), 5)
+      : 1;
+
+    if (!theme) {
+      return c.json({ error: "投稿テーマを入力してください" }, 400);
+    }
+
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      return c.json({ error: "OPENAI_API_KEY が設定されていません" }, 500);
+    }
+
+    const prompt = buildInstagramPrompt({ ...body, theme, count });
+
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content:
+              "あなたは医療広告ガイドラインに配慮できる歯科医院のSNS担当ライターです。日本語で、指定形式だけを返してください。",
+          },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 2200,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error("OpenAI Instagram API error:", errText);
+      return c.json({ error: "AI APIの呼び出しに失敗しました" }, 500);
+    }
+
+    const data = await res.json();
+    const result = String(data.choices?.[0]?.message?.content ?? "").trim();
+    const warnings = inspectInstagramPost(result);
+    return c.json({ result, warnings });
+  } catch (err) {
+    console.error("[instagram] Error:", err);
     return c.json({ error: "サーバーエラーが発生しました" }, 500);
   }
 });
@@ -649,6 +724,112 @@ app.get("/admin/logs/csv", async (c) => {
     },
   });
 });
+
+const INSTAGRAM_BANNED_TERMS = [
+  "日本一",
+  "世界一",
+  "最高",
+  "最先端",
+  "絶対",
+  "必ず治る",
+  "100%",
+  "痛くない",
+  "絶対安全",
+  "副作用なし",
+  "他院ではできない",
+  "口コミ",
+  "体験談",
+  "Before",
+  "After",
+  "ビフォー",
+  "アフター",
+];
+
+function buildInstagramPrompt(req: InstagramGenerateRequest): string {
+  const requestedCount = Number(req.count ?? 1);
+  const count = Number.isFinite(requestedCount)
+    ? Math.min(Math.max(requestedCount, 1), 5)
+    : 1;
+  return `# 役割
+あなたは、大阪府堺市にある「医療法人ふじもと歯科」のSNS担当ライターです。
+歯科医療の知識と、医療広告ガイドラインへの深い理解を持ち、患者さんに優しく語りかける文章を書きます。
+
+# 投稿条件
+- 投稿テーマ：${req.theme}
+- 作成数：${count}投稿
+- 読者ターゲット：${req.audience || "30〜60代の地域住民（堺市周辺）"}
+- トーン：${req.tone || "親しみやすく、丁寧で、専門家としての信頼感がある"}
+- 最後の行動喚起：${req.cta || "お気軽にご相談ください"}
+- 追加メモ：${req.notes || "特になし"}
+
+# 医院情報
+- 医院名：ふじもと歯科
+- 所在地：大阪府堺市堺区中瓦町2-3-14 パーターさかもと銀座ビル2階
+- アクセス：堺東駅西口から徒歩2分
+- 電話：050-1808-5701
+- Instagram：@fujimotoshika
+- ホームページ：https://shika-fujimoto.com/
+
+# 必ず守るルール（医療広告ガイドライン対応）
+以下の表現は絶対に使わないでください：
+- 「日本一」「世界一」「最高」「最先端」「絶対」「必ず治る」「100%」など最上級・断定的表現
+- 「痛くない」「絶対安全」「副作用なし」など効果やリスクの断定
+- 患者さんの体験談・口コミ・Before/After的な描写
+- 他院との比較（「他院ではできない」など）
+- 公的医療保険外の自由診療を推奨する際の、効果の断定的表現
+- 芸能人・有名人の利用に関する記述
+
+# 書き方の原則
+- 1投稿は日本語で250〜400文字を目安にする
+- 冒頭1行で読者の関心を引く（質問形・気づき・季節の話題など）
+- 専門用語を使うときは必ず一般用語で言い換える
+  例：SPTではなく「歯周病が落ち着いた後の定期的なメンテナンス」
+- 数字や根拠を入れて説得力を高める。ただし誇張しない
+- 最後に行動を促す一文を入れる
+- 絵文字は1投稿につき3〜5個まで。多用しない
+- 自由診療に触れる場合は、効果には個人差があること、診査・相談が必要なことを自然に補足する
+- 不安をあおる表現ではなく、早めの相談・確認を促す表現にする
+
+# ハッシュタグのルール
+- 合計15〜20個
+- 内訳：地域系（堺市・大阪）5個、歯科一般5個、テーマ固有5〜10個
+- #ふじもと歯科 を必ず含める
+
+# 出力形式
+${count > 1 ? "各投稿の前に『--- 投稿1 ---』のような区切りを入れてください。" : ""}
+【投稿本文】
+（ここに本文）
+
+【ハッシュタグ】
+（ここにハッシュタグをスペース区切りで）
+
+【画像案】
+（このテーマに合うCanvaテンプレート案を1〜2行で）
+
+【投稿に関する注意点】
+（医療広告ガイドライン上、特に確認してほしい点があれば）`;
+}
+
+function inspectInstagramPost(result: string): string[] {
+  const warnings: string[] = [];
+  const foundTerms = INSTAGRAM_BANNED_TERMS.filter((term) =>
+    result.includes(term)
+  );
+  if (foundTerms.length) {
+    warnings.push(`使用注意表現の可能性: ${foundTerms.join("、")}`);
+  }
+
+  const hashtagCount = (result.match(/#[^\s#]+/g) ?? []).length;
+  if (hashtagCount > 0 && (hashtagCount < 15 || hashtagCount > 100)) {
+    warnings.push(
+      `ハッシュタグ数が目安外の可能性があります（検出: ${hashtagCount}個）`,
+    );
+  }
+  if (!result.includes("#ふじもと歯科")) {
+    warnings.push("#ふじもと歯科 が含まれていません");
+  }
+  return warnings;
+}
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
 
